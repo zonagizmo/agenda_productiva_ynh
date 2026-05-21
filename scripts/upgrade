@@ -1,0 +1,20 @@
+#!/bin/bash
+source _common.sh
+source /usr/share/yunohost/helpers
+
+ynh_systemd_action --service_name="$app" --action="stop"
+
+# ── Actualizar fuentes ─────────────────────────────────────
+cp -r ../sources/. "$install_dir/"
+chown -R "$app:www-data" "$install_dir"
+chmod -R o-rwx "$install_dir"
+
+# ── Actualizar dependencias Python ─────────────────────────
+"$install_dir/venv/bin/pip" install --quiet --upgrade pip
+"$install_dir/venv/bin/pip" install --quiet -r "$install_dir/requirements.txt"
+
+# ── Regenerar configs ──────────────────────────────────────
+ynh_add_systemd_config
+ynh_add_nginx_config
+
+ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"

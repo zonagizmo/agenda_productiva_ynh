@@ -1,0 +1,23 @@
+#!/bin/bash
+source _common.sh
+source /usr/share/yunohost/helpers
+
+# ── Copiar fuentes ─────────────────────────────────────────
+cp -r ../sources/. "$install_dir/"
+chown -R "$app:www-data" "$install_dir"
+chmod -R o-rwx "$install_dir"
+
+# ── Crear virtualenv e instalar dependencias ───────────────
+python3 -m venv "$install_dir/venv"
+"$install_dir/venv/bin/pip" install --quiet --upgrade pip
+"$install_dir/venv/bin/pip" install --quiet -r "$install_dir/requirements.txt"
+
+# ── Systemd ────────────────────────────────────────────────
+ynh_add_systemd_config
+yunohost service add "$app" --description="Agenda Productiva" --log="/var/log/$app/$app.log"
+
+# ── Nginx ──────────────────────────────────────────────────
+ynh_add_nginx_config
+
+# ── Arrancar servicio ──────────────────────────────────────
+ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"
