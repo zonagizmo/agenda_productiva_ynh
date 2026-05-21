@@ -37,4 +37,5 @@ nginx -t && systemctl reload nginx
 systemctl start "$app"
 
 # ── Icono portal SSOwat ────────────────────────────────────
+mkdir -p /usr/share/ssowat/portal/assets/icons
 install -m 644 ../logo.png /usr/share/ssowat/portal/assets/icons/"$app".png
