@@ -2,7 +2,18 @@
 source _common.sh
 source /usr/share/yunohost/helpers
 
-ynh_systemd_action --service_name="$app" --action="stop"
+_apply_template() {
+    sed -i \
+        -e "s|__APP__|$app|g" \
+        -e "s|__INSTALL_DIR__|$install_dir|g" \
+        -e "s|__DATA_DIR__|$data_dir|g" \
+        -e "s|__PORT__|$port|g" \
+        -e "s|__PATH__|$path|g" \
+        -e "s|__DOMAIN__|$domain|g" \
+        "$1"
+}
+
+systemctl stop "$app"
 
 # ── Actualizar fuentes ─────────────────────────────────────
 cp -r ../sources/. "$install_dir/"
@@ -14,7 +25,13 @@ chmod -R o-rwx "$install_dir"
 "$install_dir/venv/bin/pip" install --quiet -r "$install_dir/requirements.txt"
 
 # ── Regenerar configs ──────────────────────────────────────
-ynh_add_systemd_config
-ynh_add_nginx_config
+install -m 644 ../conf/systemd.service /etc/systemd/system/"$app".service
+_apply_template /etc/systemd/system/"$app".service
+systemctl daemon-reload
 
-ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"
+mkdir -p /etc/nginx/conf.d/"$domain".d
+install -m 644 ../conf/nginx.conf /etc/nginx/conf.d/"$domain".d/"$app".conf
+_apply_template /etc/nginx/conf.d/"$domain".d/"$app".conf
+nginx -t && systemctl reload nginx
+
+systemctl start "$app"
