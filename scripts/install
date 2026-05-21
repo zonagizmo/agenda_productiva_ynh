@@ -37,3 +37,6 @@ mkdir -p /etc/nginx/conf.d/"$domain".d
 install -m 644 ../conf/nginx.conf /etc/nginx/conf.d/"$domain".d/"$app".conf
 _apply_template /etc/nginx/conf.d/"$domain".d/"$app".conf
 nginx -t && systemctl reload nginx
+
+# ── Icono portal SSOwat ────────────────────────────────────
+install -m 644 ../logo.png /usr/share/ssowat/portal/assets/icons/"$app".png

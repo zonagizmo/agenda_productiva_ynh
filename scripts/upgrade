@@ -35,3 +35,6 @@ _apply_template /etc/nginx/conf.d/"$domain".d/"$app".conf
 nginx -t && systemctl reload nginx
 
 systemctl start "$app"
+
+# ── Icono portal SSOwat ────────────────────────────────────
+install -m 644 ../logo.png /usr/share/ssowat/portal/assets/icons/"$app".png
