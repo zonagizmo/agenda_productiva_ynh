@@ -84,6 +84,14 @@ PROVIDERS = {
     },
 }
 
+# ── Debug (eliminar tras resolver el problema de auth) ────
+@app.route("/api/debug-headers")
+def debug_headers():
+    headers = {k: v for k, v in request.headers}
+    environ_user = request.environ.get("HTTP_X_REMOTE_USER", "(no encontrado en environ)")
+    return jsonify({"headers": headers, "environ_HTTP_X_REMOTE_USER": environ_user})
+
+
 # ── Routes ────────────────────────────────────────────────
 @app.route("/")
 def index():
