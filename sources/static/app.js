@@ -1004,4 +1004,8 @@ function renderPlanSection() { if(curTab==="agenda") renderAgendaMain(); }
   await loadAll();
   render();
   startNotifChecker();
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
+  }
 })();

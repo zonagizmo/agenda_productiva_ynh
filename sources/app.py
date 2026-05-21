@@ -36,7 +36,7 @@ def current_user() -> str:
 @app.before_request
 def ensure_user_db():
     """Crea la BD SQLite del usuario la primera vez que accede."""
-    if request.endpoint and request.endpoint not in ("static", "debug_headers", "manifest"):
+    if request.endpoint and request.endpoint not in ("static", "debug_headers", "manifest", "service_worker"):
         try:
             user = current_user()
             init_db(user)
@@ -115,6 +115,15 @@ def debug_headers():
 def index():
     current_user()
     return render_template("index.html", version=VERSION_LABEL, path_prefix=PATH_PREFIX)
+
+
+@app.route("/sw.js")
+def service_worker():
+    from flask import send_from_directory
+    resp = send_from_directory("static", "sw.js", mimetype="application/javascript")
+    resp.headers["Service-Worker-Allowed"] = (PATH_PREFIX or "") + "/"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 
 @app.route("/manifest.json")
