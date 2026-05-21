@@ -11,6 +11,21 @@ const LANG = {
       { key:"reuniones", label:"Reuniones", icon:"🗓️", placeholder:"Añadir reunión..." },
       { key:"plazos",    label:"Plazos",    icon:"⏰", placeholder:"Añadir plazo..." },
     ],
+    tabTareas: "📋 Tareas",
+    tasksTitle: "Tareas",
+    addTask: "+ Nueva tarea",
+    taskPH: "Descripción...",
+    pendingTasks: "Pendientes",
+    completedTasks: "Completadas",
+    noPendingTasks: "No hay tareas pendientes.",
+    noTasks: "Sin tareas. Pulsa «+ Nueva tarea» para empezar.",
+    dueDateLabel: "Vence",
+    allFilter: "Todas",
+    addLabelToTask: "+ etiqueta",
+    labelsTitle: "🏷️ Etiquetas",
+    addLabel: "+ Nueva etiqueta",
+    labelNamePH: "Nombre...",
+    backlogSection: "🔖 Tareas pendientes (backlog)",
     addBtn: "+ Añadir", genBtn: "⚡ Generar plan del día", generating: "Generando...",
     planTitle: "🚀 Plan del día", regen: "↺ Regenerar", delPlan: "✕ Borrar",
     histTitle: "📚 Historial",
@@ -63,6 +78,21 @@ const LANG = {
       { key:"reuniones", label:"Meetings",  icon:"🗓️", placeholder:"Add meeting..." },
       { key:"plazos",    label:"Deadlines", icon:"⏰", placeholder:"Add deadline..." },
     ],
+    tabTareas: "📋 Tasks",
+    tasksTitle: "Tasks",
+    addTask: "+ New task",
+    taskPH: "Description...",
+    pendingTasks: "Pending",
+    completedTasks: "Completed",
+    noPendingTasks: "No pending tasks.",
+    noTasks: "No tasks yet. Press «+ New task» to start.",
+    dueDateLabel: "Due",
+    allFilter: "All",
+    addLabelToTask: "+ label",
+    labelsTitle: "🏷️ Labels",
+    addLabel: "+ New label",
+    labelNamePH: "Label name...",
+    backlogSection: "🔖 Pending backlog tasks",
     addBtn: "+ Add", genBtn: "⚡ Generate day plan", generating: "Generating...",
     planTitle: "🚀 Day Plan", regen: "↺ Regenerate", delPlan: "✕ Delete",
     histTitle: "📚 History",
@@ -120,6 +150,16 @@ let openAvisos  = {};   // itemId -> boolean
 let firedSet    = new Set();
 let notifInterval = null;
 
+// ── Tasks state ───────────────────────────────────────────
+let tasks            = [];   // [{id,texto,done,prioridad,dueDate,labels,avisos,createdAt}]
+let labels           = [];   // [{id,nombre,color}]
+let filterLabel      = null; // label id | null = todas
+let showDoneTasks    = false;
+let openTaskDetail   = {};   // taskId -> bool
+let openTaskLblPick  = {};   // taskId -> bool
+let newLabelColor    = "#4d96ff";
+const LABEL_COLORS   = ["#4d96ff","#c77dff","#6bcb77","#ffd93d","#ff6b6b","#ff9f43"];
+
 // ── Helpers ───────────────────────────────────────────────
 function todayKey() { return new Date().toISOString().slice(0,10); }
 function isToday(k) { return k === todayKey(); }
@@ -127,6 +167,23 @@ function isPast(k)  { return k < todayKey(); }
 function uid()      { return Math.random().toString(36).slice(2,9); }
 function newItem(t=""){ return { id:uid(), texto:t, avisos:[] }; }
 function newAviso() { return { id:uid(), texto:"", fecha:todayKey(), hora:"09:00", prioridad:"media", fired:false }; }
+
+function newTask()  { return { id:uid(), texto:"", done:false, prioridad:"media", dueDate:"", labels:[], avisos:[], createdAt:new Date().toISOString() }; }
+function newLabel(n="",c="#4d96ff") { return { id:uid(), nombre:n, color:c }; }
+function getLabelById(id) { return labels.find(l=>l.id===id); }
+function isOverdue(task) { return task.dueDate && !task.done && task.dueDate < todayKey(); }
+function isTodayDue(task){ return task.dueDate === todayKey(); }
+function prioCmp(a,b) { const o={alta:0,media:1,baja:2}; return (o[a.prioridad]||1)-(o[b.prioridad]||1); }
+function sortPending(list) {
+  return [...list].sort((a,b)=>{
+    const ao=isOverdue(a),bo=isOverdue(b);
+    if(ao!==bo) return ao?-1:1;
+    if(a.dueDate&&b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    if(a.dueDate) return -1;
+    if(b.dueDate) return 1;
+    return prioCmp(a,b);
+  });
+}
 
 function defaultConfig() {
   return { jornadaInicio:"09:00", jornadaFin:"18:00", pausaComida:true,
@@ -210,9 +267,15 @@ async function loadAll() {
   }
   const cfg = await storageGet("config-v1");
   if (cfg) config = { ...defaultConfig(), ...cfg };
+  const tks = await storageGet("tasks-v1");
+  if (tks) tasks = tks;
+  const lbs = await storageGet("labels-v1");
+  if (lbs) labels = lbs;
 }
 async function saveAgendaRemote() { await storageSet("agenda-v3", agenda); }
 async function saveConfigRemote() { await storageSet("config-v1", config); }
+async function saveTasksRemote()  { await storageSet("tasks-v1",  tasks);  }
+async function saveLabelsRemote() { await storageSet("labels-v1", labels); }
 
 // ── Notifications ─────────────────────────────────────────
 function notifPerm() {
@@ -257,7 +320,26 @@ function checkAvisos() {
       });
     });
   });
-  if (dirty) { saveAgendaRemote(); renderPlanSection(); }
+  // Avisos de tareas persistentes
+  tasks.forEach(task => {
+    (task.avisos||[]).forEach(av => {
+      if (!av.texto || av.fired) return;
+      const dt = new Date(`${av.fecha}T${av.hora}:00`);
+      const diff = now - dt;
+      if (diff >= 0 && diff < win && !firedSet.has(av.id)) {
+        firedSet.add(av.id);
+        const dot = t().priors.find(p=>p.key===av.prioridad)?.dot||"🔔";
+        try {
+          new Notification(`${dot} 📋 ${lang==="es"?"Tarea":"Task"} — ${t().aviso}`, {
+            body: `${av.texto}${task.texto?" · "+task.texto:""}`, tag: av.id,
+          });
+        } catch {}
+        av.fired = true;
+        dirty = true;
+      }
+    });
+  });
+  if (dirty) { saveAgendaRemote(); saveTasksRemote(); renderPlanSection(); }
 }
 
 // ── Render helpers ────────────────────────────────────────
@@ -627,6 +709,15 @@ async function generatePlan() {
     jornada_fin:config.jornadaFin, pausa_comida:config.pausaComida,
     pausa_inicio:config.pausaInicio, pausa_fin:config.pausaFin, notas_extra:config.notas };
   secs.forEach(s => { body[s.key] = (day[s.key]||[]).map(x=>({texto:x.texto,avisos:x.avisos||[]})); });
+  // Tareas persistentes pendientes → incluir en el plan IA
+  body.tareas_persistentes = tasks
+    .filter(tk=>!tk.done && tk.texto.trim())
+    .map(tk=>({
+      texto: tk.texto,
+      prioridad: tk.prioridad,
+      dueDate: tk.dueDate||"",
+      label_names: tk.labels.map(lid=>getLabelById(lid)?.nombre||"").filter(Boolean),
+    }));
 
   try {
     const pr = await fetch("./api/build-prompt",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
@@ -746,6 +837,279 @@ function renderSidebar() {
     const ap=ce("div"); ap.style.display="flex;flex-direction:column;gap:.5rem";
     renderAvisosPanel(ap); sc.appendChild(ap);
   }
+}
+
+// ── Tareas persistentes ───────────────────────────────────
+function renderTaskAvisoEditor(av, color, onUpdate, onDelete, container) {
+  renderAvisoEditor(av, color, onUpdate, onDelete, container);
+}
+
+function renderTaskRow(task, container) {
+  const T = t();
+  const prioColor = getPriorColor(task.prioridad);
+  const isOpen    = openTaskDetail[task.id];
+  const isLblOpen = openTaskLblPick[task.id];
+
+  const row = ce("div", "task-row"+(task.done?" done-row":"")+" fade");
+
+  // ── Main line ─────────────────────────────────────────
+  const main = ce("div","task-main");
+
+  // Checkbox
+  const chk = ce("button","task-check"+(task.done?" done":""));
+  chk.style.borderColor = task.done ? "" : prioColor;
+  chk.textContent = task.done ? "✓" : "";
+  chk.onclick = () => {
+    task.done = !task.done;
+    if(task.done) openTaskDetail[task.id]=false;
+    saveTasksRemote(); renderTareas();
+  };
+
+  // Priority dot
+  const dot = ce("span","task-prio-dot");
+  dot.style.background = prioColor;
+
+  // Text input
+  const inp = ce("input","task-input"+(task.done?" done-text":""));
+  inp.type="text"; inp.value=task.texto; inp.placeholder=T.taskPH;
+  inp.oninput = e => { task.texto=e.target.value; saveTasksRemote(); };
+  inp.onfocus = () => inp.style.color=task.done?"":"var(--text)";
+
+  // Meta chips (due date + labels) — compact display
+  const meta = ce("div","task-meta");
+  if (task.dueDate) {
+    const chip = ce("span","due-chip "+(isOverdue(task)?"overdue":isTodayDue(task)?"today":"ok"));
+    chip.textContent = (isOverdue(task)?"⚠️ ":"📅 ") + fmtShort(task.dueDate);
+    meta.appendChild(chip);
+  }
+  task.labels.forEach(lid => {
+    const lbl = getLabelById(lid);
+    if(!lbl) return;
+    const chip = ce("span","task-lbl-chip");
+    chip.style.cssText=`background:${lbl.color}22;border-color:${lbl.color}55;color:${lbl.color}`;
+    chip.textContent = lbl.nombre;
+    meta.appendChild(chip);
+  });
+
+  // Bell (avisos)
+  const hasAv = task.avisos && task.avisos.length > 0;
+  const bell = ce("button","item-bell"+(hasAv?" has-avisos":""));
+  bell.innerHTML = `🔔${hasAv?`<span class="bell-badge">${task.avisos.length}</span>`:""}`;
+  bell.onclick = () => {
+    if(!isOpen && !hasAv) { task.avisos=[newAviso()]; saveTasksRemote(); }
+    openTaskDetail[task.id] = !isOpen || !hasAv ? true : true;
+    renderTareas();
+  };
+
+  // Expand toggle
+  const exp = ce("button","task-expand-btn");
+  exp.textContent = isOpen ? "▴" : "▾";
+  exp.onclick = () => { openTaskDetail[task.id]=!isOpen; renderTareas(); };
+
+  // Delete
+  const del = ce("button","item-del"); del.textContent="✕";
+  del.onclick = () => { tasks=tasks.filter(x=>x.id!==task.id); saveTasksRemote(); renderTareas(); };
+
+  main.append(chk, dot, inp, meta, bell, exp, del);
+  row.appendChild(main);
+
+  // ── Detail panel ──────────────────────────────────────
+  if (isOpen) {
+    const det = ce("div","task-detail");
+
+    // Priority
+    const prioRow = ce("div","task-detail-row");
+    prioRow.innerHTML=`<span class="task-detail-label">${lang==="es"?"Prioridad":"Priority"}</span>`;
+    T.priors.forEach(p => {
+      const btn = ce("button","prior-btn"+(task.prioridad===p.key?" active":""));
+      const pc  = getPriorColor(p.key);
+      if(task.prioridad===p.key) btn.style.cssText=`background:${pc}33;border-color:${pc};color:${pc}`;
+      btn.textContent=`${p.dot} ${p.label}`;
+      btn.onclick=()=>{ task.prioridad=p.key; saveTasksRemote(); renderTareas(); };
+      prioRow.appendChild(btn);
+    });
+    det.appendChild(prioRow);
+
+    // Due date
+    const dueRow = ce("div","task-detail-row");
+    dueRow.innerHTML=`<span class="task-detail-label">${T.dueDateLabel}</span>`;
+    const dueInp = ce("input","task-due-input");
+    dueInp.type="date"; dueInp.value=task.dueDate||"";
+    dueInp.onchange=e=>{ task.dueDate=e.target.value; saveTasksRemote(); renderTareas(); };
+    if(task.dueDate){ const clr=ce("button","item-del");clr.title="Quitar";clr.textContent="✕";clr.onclick=()=>{task.dueDate="";saveTasksRemote();renderTareas();}; dueRow.append(dueInp,clr); } else { dueRow.appendChild(dueInp); }
+    det.appendChild(dueRow);
+
+    // Labels
+    const lblRow = ce("div","task-detail-row");
+    lblRow.innerHTML=`<span class="task-detail-label">${lang==="es"?"Etiquetas":"Labels"}</span>`;
+    const lblList = ce("div","task-lbl-list");
+    task.labels.forEach(lid => {
+      const lbl=getLabelById(lid); if(!lbl) return;
+      const chip=ce("span","task-lbl-chip");
+      chip.style.cssText=`background:${lbl.color}22;border-color:${lbl.color}55;color:${lbl.color}`;
+      const rm=ce("button","task-lbl-rm"); rm.textContent="✕";
+      rm.onclick=()=>{ task.labels=task.labels.filter(x=>x!==lid); saveTasksRemote(); renderTareas(); };
+      chip.textContent=lbl.nombre; chip.appendChild(rm); lblList.appendChild(chip);
+    });
+    // Add label button
+    const available = labels.filter(l=>!task.labels.includes(l.id));
+    if(available.length>0){
+      const addLbl=ce("button","lbl-add-btn"); addLbl.textContent=T.addLabelToTask;
+      addLbl.onclick=()=>{ openTaskLblPick[task.id]=!isLblOpen; renderTareas(); };
+      lblList.appendChild(addLbl);
+      if(isLblOpen){
+        const picker=ce("div","lbl-picker");
+        available.forEach(lbl=>{
+          const it=ce("button","lbl-pick-item");
+          it.style.cssText=`background:${lbl.color}22;border-color:${lbl.color}55;color:${lbl.color}`;
+          it.textContent=lbl.nombre;
+          it.onclick=()=>{ task.labels.push(lbl.id); openTaskLblPick[task.id]=false; saveTasksRemote(); renderTareas(); };
+          picker.appendChild(it);
+        });
+        lblList.appendChild(picker);
+      }
+    }
+    lblRow.appendChild(lblList);
+    det.appendChild(lblRow);
+
+    // Avisos
+    if(task.avisos && task.avisos.length>0){
+      const avPanel=ce("div","avisos-panel");
+      task.avisos.forEach((av,ai)=>{
+        renderTaskAvisoEditor(av, prioColor,
+          updated=>{ task.avisos[ai]=updated; saveTasksRemote(); renderTareas(); },
+          ()=>{ task.avisos.splice(ai,1); saveTasksRemote(); renderTareas(); },
+          avPanel
+        );
+      });
+      const addAv=ce("button","add-aviso-btn"); addAv.textContent=T.addAviso;
+      addAv.onclick=()=>{ task.avisos.push(newAviso()); saveTasksRemote(); renderTareas(); };
+      avPanel.appendChild(addAv);
+      det.appendChild(avPanel);
+    }
+
+    row.appendChild(det);
+  }
+
+  container.appendChild(row);
+}
+
+function renderLabelsManager() {
+  const T = t();
+  const mgr = ce("div","labels-manager");
+  const title = ce("div","labels-manager-title"); title.textContent=T.labelsTitle;
+  mgr.appendChild(title);
+
+  // Existing labels
+  if(labels.length>0){
+    const list=ce("div","labels-list");
+    labels.forEach(lbl=>{
+      const chip=ce("div","lbl-manager-chip");
+      chip.style.cssText=`background:${lbl.color}22;border-color:${lbl.color}55;color:${lbl.color}`;
+      chip.textContent=lbl.nombre;
+      const del=ce("button","lbl-manager-del"); del.textContent="✕";
+      del.onclick=()=>{
+        labels=labels.filter(l=>l.id!==lbl.id);
+        tasks.forEach(tk=>{ tk.labels=tk.labels.filter(id=>id!==lbl.id); });
+        if(filterLabel===lbl.id) filterLabel=null;
+        saveLabelsRemote(); saveTasksRemote(); renderTareas();
+      };
+      chip.appendChild(del); list.appendChild(chip);
+    });
+    mgr.appendChild(list);
+  }
+
+  // Create form
+  const form=ce("div","lbl-create-form");
+  const nameInp=ce("input","lbl-name-input");
+  nameInp.placeholder=T.labelNamePH; nameInp.maxLength=24;
+
+  const swatches=ce("div","color-swatches");
+  LABEL_COLORS.forEach(c=>{
+    const sw=ce("button","color-swatch"+(newLabelColor===c?" sel":""));
+    sw.style.background=c; sw.title=c;
+    sw.onclick=()=>{ newLabelColor=c; renderTareas(); };
+    swatches.appendChild(sw);
+  });
+
+  const createBtn=ce("button","lbl-create-btn"); createBtn.textContent=T.addLabel;
+  createBtn.onclick=()=>{
+    const name=nameInp.value.trim();
+    if(!name) return;
+    labels.push(newLabel(name,newLabelColor));
+    saveLabelsRemote(); renderTareas();
+  };
+
+  form.append(nameInp,swatches,createBtn);
+  mgr.appendChild(form);
+  return mgr;
+}
+
+function renderTareas() {
+  const view=el("tareas-view");
+  view.innerHTML="";
+  const T=t();
+  const wrap=ce("div","");
+  wrap.style.cssText="max-width:700px;margin:0 auto;padding:1.3rem 1.2rem";
+
+  // Header
+  const hdr=ce("div","tasks-header");
+  const title=ce("div","date-title"); title.textContent=T.tasksTitle;
+  const addBtn=ce("button","task-add-btn"); addBtn.textContent=T.addTask;
+  addBtn.onclick=()=>{ const tk=newTask(); tasks.unshift(tk); openTaskDetail[tk.id]=true; saveTasksRemote(); renderTareas(); };
+  hdr.append(title,addBtn);
+  wrap.appendChild(hdr);
+
+  // Filter bar
+  if(labels.length>0){
+    const bar=ce("div","tasks-filter-bar");
+    const allBtn=ce("button","lbl-filter-btn"+(filterLabel===null?" active":""));
+    allBtn.textContent=T.allFilter;
+    allBtn.onclick=()=>{ filterLabel=null; renderTareas(); };
+    bar.appendChild(allBtn);
+    labels.forEach(lbl=>{
+      const btn=ce("button","lbl-filter-btn"+(filterLabel===lbl.id?" active":""));
+      btn.innerHTML=`<span class="label-dot" style="background:${lbl.color};display:inline-block;width:7px;height:7px;border-radius:50%"></span> ${esc(lbl.nombre)}`;
+      btn.onclick=()=>{ filterLabel=filterLabel===lbl.id?null:lbl.id; renderTareas(); };
+      bar.appendChild(btn);
+    });
+    wrap.appendChild(bar);
+  }
+
+  // Filter tasks
+  const visible=filterLabel?tasks.filter(tk=>tk.labels.includes(filterLabel)):tasks;
+  const pending=sortPending(visible.filter(tk=>!tk.done));
+  const done=visible.filter(tk=>tk.done);
+
+  // Empty state
+  if(tasks.length===0){
+    const em=ce("div","hist-empty"); em.innerHTML=`<p style="font-size:2rem">📋</p><p>${T.noTasks}</p>`; wrap.appendChild(em);
+  } else {
+    // Pending
+    const pendCard=ce("div","sections-card");
+    const pendHdr=ce("div","tasks-section-hdr");
+    const pendLbl=ce("span","section-label"); pendLbl.style.color="#4d96ff";
+    pendLbl.innerHTML=`✅ ${T.pendingTasks} <span class="section-badge" style="background:#4d96ff22;border-color:#4d96ff44;color:#4d96ff">${pending.length}</span>`;
+    pendHdr.appendChild(pendLbl); pendCard.appendChild(pendHdr);
+    if(pending.length===0){ const em=ce("p",""); em.style.cssText="color:var(--muted);font-size:.83rem;padding:.3rem 0"; em.textContent=T.noPendingTasks; pendCard.appendChild(em); }
+    else { pending.forEach(tk=>renderTaskRow(tk,pendCard)); }
+    wrap.appendChild(pendCard);
+
+    // Completed
+    if(done.length>0){
+      const doneCard=ce("div","sections-card");
+      const doneToggle=ce("button","tasks-done-toggle");
+      doneToggle.innerHTML=`${showDoneTasks?"▾":"▸"} ${T.completedTasks} <span class="section-badge" style="background:var(--faint);border-color:var(--faint);color:var(--muted)">${done.length}</span>`;
+      doneToggle.onclick=()=>{ showDoneTasks=!showDoneTasks; renderTareas(); };
+      doneCard.appendChild(doneToggle);
+      if(showDoneTasks) done.forEach(tk=>renderTaskRow(tk,doneCard));
+      wrap.appendChild(doneCard);
+    }
+  }
+
+  // Labels manager
+  wrap.appendChild(renderLabelsManager());
+  view.appendChild(wrap);
 }
 
 // ── Historial ─────────────────────────────────────────────
@@ -977,11 +1341,13 @@ function render() {
   nb.onclick=perm==="default"?requestNotifPerm:null;
 
   // Show/hide views
-  el("agenda-view").style.display  = curTab==="agenda"    ? "flex" : "none";
+  el("agenda-view").style.display   = curTab==="agenda"    ? "flex"  : "none";
+  el("tareas-view").style.display   = curTab==="tareas"    ? "block" : "none";
   el("historial-view").style.display= curTab==="historial" ? "block" : "none";
-  el("config-view").style.display  = curTab==="config"    ? "block" : "none";
+  el("config-view").style.display   = curTab==="config"    ? "block" : "none";
 
   if (curTab==="agenda")    { renderSidebar(); renderAgendaMain(); }
+  if (curTab==="tareas")    renderTareas();
   if (curTab==="historial") renderHistorial();
   if (curTab==="config")    renderConfig();
 }

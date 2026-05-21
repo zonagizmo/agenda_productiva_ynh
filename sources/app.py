@@ -230,6 +230,22 @@ def build_prompt():
     if not blocks.strip():
         return jsonify({"error": "no_content"}), 400
 
+    # Tareas persistentes pendientes
+    tp = data.get("tareas_persistentes", [])
+    tp_filled = [t for t in tp if t.get("texto", "").strip()]
+    if tp_filled:
+        dots = {"alta": "🔴", "media": "🟡", "baja": "🟢"}
+        lines = []
+        for t in tp_filled:
+            dot  = dots.get(t.get("prioridad", ""), "•")
+            text = t["texto"]
+            due  = t.get("dueDate", "")
+            lbls = t.get("label_names", [])
+            extra = (f" [📅 {due}]" if due else "") + (f" [{', '.join(lbls)}]" if lbls else "")
+            lines.append(f"  {dot} {text}{extra}")
+        label_bp = "🔖 Pending backlog tasks" if lang == "en" else "🔖 Tareas pendientes (backlog)"
+        blocks += "\n\n" + label_bp + ":\n" + "\n".join(lines)
+
     pausa_info = (
         (f"Lunch break: {pausa_inicio}–{pausa_fin}." if lang == "en"
          else f"Pausa para comer: {pausa_inicio}–{pausa_fin}.")
