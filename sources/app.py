@@ -1,6 +1,7 @@
 import os
+import json
 import base64
-from flask import Flask, jsonify, request, render_template, abort
+from flask import Flask, jsonify, request, render_template, abort, Response
 from database import init_db, get_value, set_value, delete_value
 from version import get_version_info, VERSION_LABEL
 
@@ -35,7 +36,7 @@ def current_user() -> str:
 @app.before_request
 def ensure_user_db():
     """Crea la BD SQLite del usuario la primera vez que accede."""
-    if request.endpoint and request.endpoint not in ("static", "debug_headers"):
+    if request.endpoint and request.endpoint not in ("static", "debug_headers", "manifest"):
         try:
             user = current_user()
             init_db(user)
@@ -114,6 +115,29 @@ def debug_headers():
 def index():
     current_user()
     return render_template("index.html", version=VERSION_LABEL, path_prefix=PATH_PREFIX)
+
+
+@app.route("/manifest.json")
+def manifest():
+    base = PATH_PREFIX
+    data = {
+        "name": "Agenda Productiva",
+        "short_name": "Agenda",
+        "description": "Planificación diaria con IA",
+        "start_url": base + "/",
+        "scope": base + "/",
+        "display": "standalone",
+        "orientation": "portrait-primary",
+        "background_color": "#080810",
+        "theme_color": "#4d96ff",
+        "icons": [
+            {"src": base + "/static/icons/icon-192.png",          "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": base + "/static/icons/icon-512.png",          "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": base + "/static/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+            {"src": base + "/static/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    return Response(json.dumps(data), mimetype="application/manifest+json")
 
 
 @app.route("/api/version")
