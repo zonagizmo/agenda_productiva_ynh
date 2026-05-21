@@ -38,6 +38,10 @@ install -m 644 ../conf/nginx.conf /etc/nginx/conf.d/"$domain".d/"$app".conf
 _apply_template /etc/nginx/conf.d/"$domain".d/"$app".conf
 nginx -t && systemctl reload nginx
 
-# ── Icono portal SSOwat ────────────────────────────────────
-mkdir -p /usr/share/ssowat/portal/assets/icons
-install -m 644 ../logo.png /usr/share/ssowat/portal/assets/icons/"$app".png
+# ── Icono portal (SSOwat ≤11 y YunoHost 12+) ──────────────
+for _icon_dir in \
+    /usr/share/yunohost/portal/assets/apps \
+    /usr/share/ssowat/portal/assets/icons; do
+    mkdir -p "$_icon_dir"
+    install -m 644 ../logo.png "$_icon_dir/$app.png"
+done
