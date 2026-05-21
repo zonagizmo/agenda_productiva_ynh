@@ -1,4 +1,5 @@
 import os
+import base64
 from flask import Flask, jsonify, request, render_template, abort
 from database import init_db, get_value, set_value, delete_value
 from version import get_version_info, VERSION_LABEL
@@ -10,20 +11,36 @@ PATH_PREFIX = os.environ.get("APP_PATH", "").rstrip("/")
 
 # ── Autenticación SSO ──────────────────────────────────────
 def current_user() -> str:
-    """Lee el usuario autenticado desde el header que inyecta SSOwat de YunoHost."""
-    user = request.headers.get("X-Remote-User")
-    if not user:
-        abort(401)
-    return user
+    """Extrae el usuario autenticado del header que inyecta SSOwat.
+    YunoHost usa Authorization: Basic base64(usuario:contraseña) (auth_header=basic-with-password).
+    Como fallback acepta también X-Remote-User (versiones más recientes).
+    """
+    # Método principal: Basic Auth inyectado por SSOwat
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("Basic "):
+        try:
+            decoded = base64.b64decode(auth[6:]).decode("utf-8", errors="replace")
+            username = decoded.split(":")[0]
+            if username:
+                return username
+        except Exception:
+            pass
+    # Fallback: X-Remote-User (YunoHost más reciente)
+    user = request.headers.get("X-Remote-User", "")
+    if user:
+        return user
+    abort(401)
 
 
 @app.before_request
 def ensure_user_db():
     """Crea la BD SQLite del usuario la primera vez que accede."""
-    if request.endpoint and request.endpoint != "static":
-        user = request.headers.get("X-Remote-User")
-        if user:
+    if request.endpoint and request.endpoint not in ("static", "debug_headers"):
+        try:
+            user = current_user()
             init_db(user)
+        except Exception:
+            pass
 
 
 # ── AI Providers ──────────────────────────────────────────
