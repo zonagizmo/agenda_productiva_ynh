@@ -190,6 +190,21 @@ export const useTasksStore = defineStore('tasks', () => {
     saveLabels(); saveTasks()
   }
 
+  function tasksForDay(selDate: string): Task[] {
+    const prioOrder: Record<Priority, number> = { alta: 0, media: 1, baja: 2 }
+    return tasks.value
+      .filter(t => {
+        if (t.recurrence) {
+          return isRecurringDue(t, selDate) || t.recurrence.lastCompleted === selDate
+        }
+        return !!t.dueDate && (t.dueDate === selDate || (t.dueDate < selDate && !t.done))
+      })
+      .sort((a, b) => {
+        if (a.done !== b.done) return a.done ? 1 : -1
+        return prioOrder[a.prioridad] - prioOrder[b.prioridad]
+      })
+  }
+
   function pendingForAi(selDate: string) {
     const mapTask = (t: Task) => ({
       texto: t.texto,
@@ -217,6 +232,6 @@ export const useTasksStore = defineStore('tasks', () => {
   return {
     tasks, labels, getLabelById, isOverdue, isTodayDue, sortPending,
     load, saveTasks, saveLabels, addTask, removeTask, toggleDone,
-    addLabel, removeLabel, pendingForAi, newAviso, checkAndResetRecurring,
+    addLabel, removeLabel, pendingForAi, tasksForDay, newAviso, checkAndResetRecurring,
   }
 })

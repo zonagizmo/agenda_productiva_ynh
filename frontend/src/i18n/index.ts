@@ -22,7 +22,7 @@ interface Translations {
   notifActivate: string; notifBannerText: string; notifDeniedText: string
   notifStatusGranted: string; notifStatusDenied: string; notifStatusDefault: string
   upcoming_avisos: string; past_avisos: string; noAvisos: string; noAvisosHint: string
-  calLegend: string; goToday: string
+  calLegend: string; goToday: string; dayTasksTitle: string
   errNoContent: string; errNoResponse: string; errConnect: string
   // Tasks
   tabTareas: string; tasksTitle: string; addTask: string; taskPH: string
@@ -70,7 +70,7 @@ export const LANG: Record<Lang, Translations> = {
     notifActivate: 'Activar', notifBannerText: 'Activa las notificaciones para recibir avisos.', notifDeniedText: 'Notificaciones bloqueadas en el navegador.',
     notifStatusGranted: '✓ Notificaciones activas', notifStatusDenied: '🚫 Bloqueadas', notifStatusDefault: '🔕 No activadas',
     upcoming_avisos: 'Próximos', past_avisos: 'Pasados', noAvisos: 'Sin avisos configurados.', noAvisosHint: 'Pulsa 🔔 en cualquier elemento.',
-    calLegend: '🟢 Plan  🟡 Datos  🔴 Alta  🟠 Media  ● Baja', goToday: '📍 Ir a hoy',
+    calLegend: '🟢 Plan  🟡 Datos  🔴 Alta  🟠 Media  ● Baja', goToday: '📍 Ir a hoy', dayTasksTitle: '📋 Tareas del día',
     errNoContent: 'Añade al menos un elemento antes de generar.', errNoResponse: 'La IA no devolvió respuesta.', errConnect: 'Error al conectar.',
     tabTareas: '📋 Tareas', tasksTitle: 'Tareas', addTask: '+ Nueva tarea', taskPH: 'Descripción...',
     pendingTasks: 'Pendientes', completedTasks: 'Completadas', noPendingTasks: 'No hay tareas pendientes.', noTasks: 'Sin tareas. Pulsa «+ Nueva tarea» para empezar.',
@@ -100,7 +100,7 @@ export const LANG: Record<Lang, Translations> = {
     notifActivate: 'Enable', notifBannerText: 'Enable notifications to receive alerts.', notifDeniedText: 'Notifications blocked in browser.',
     notifStatusGranted: '✓ Notifications active', notifStatusDenied: '🚫 Blocked', notifStatusDefault: '🔕 Not enabled',
     upcoming_avisos: 'Upcoming', past_avisos: 'Past', noAvisos: 'No alerts configured.', noAvisosHint: 'Press 🔔 on any item.',
-    calLegend: '🟢 Plan  🟡 Data  🔴 High  🟠 Med  ● Low', goToday: '📍 Go to today',
+    calLegend: '🟢 Plan  🟡 Data  🔴 High  🟠 Med  ● Low', goToday: '📍 Go to today', dayTasksTitle: "📋 Day's tasks",
     errNoContent: 'Add at least one item before generating.', errNoResponse: 'AI returned no response.', errConnect: 'Connection error.',
     tabTareas: '📋 Tasks', tasksTitle: 'Tasks', addTask: '+ New task', taskPH: 'Description...',
     pendingTasks: 'Pending', completedTasks: 'Completed', noPendingTasks: 'No pending tasks.', noTasks: 'No tasks yet. Press «+ New task» to start.',

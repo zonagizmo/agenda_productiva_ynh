@@ -11,6 +11,7 @@ import { LANG } from '@/i18n'
 import { api } from '@/api/client'
 import { callAiDirect } from '@/composables/useAiCall'
 import { isToday, isPast, fmtLong, fmtShort, todayKey } from '@/composables/useDate'
+import type { Priority } from '@/types'
 
 const agenda = useAgendaStore()
 const tasks  = useTasksStore()
@@ -66,6 +67,10 @@ const recentDays = computed(() =>
     .filter(k => agenda.hasPlan(k) || agenda.hasData(k))
     .sort((a,b) => b.localeCompare(a)).slice(0,6)
 )
+
+const dayTasks = computed(() => tasks.tasksForDay(agenda.selDate))
+
+function prioColor(p: Priority) { return p==='alta'?'#ff6b6b':p==='media'?'#ff9f43':'#6bcb77' }
 </script>
 
 <template>
@@ -103,6 +108,18 @@ const recentDays = computed(() =>
             <div class="cal-legend">{{ T.calLegend }}</div>
           </div>
           <button class="goto-today" @click="agenda.selDate=todayKey()">{{ T.goToday }}</button>
+
+          <!-- Tareas del día seleccionado -->
+          <div v-if="dayTasks.length" class="day-tasks-panel">
+            <p class="day-tasks-title">{{ T.dayTasksTitle }}</p>
+            <div v-for="t in dayTasks" :key="t.id" class="day-task-item" :class="{ 'day-task-done': t.done }">
+              <button class="day-task-check" :class="{ done: t.done }"
+                :style="t.done ? '' : `border-color:${prioColor(t.prioridad)};`"
+                @click="tasks.toggleDone(t.id)">{{ t.done ? '✓' : '' }}</button>
+              <span class="day-task-text" :class="{ 'done-text': t.done }">{{ t.texto || '…' }}</span>
+            </div>
+          </div>
+
           <button
             v-for="k in recentDays" :key="k"
             class="recent-day" :class="{ sel: k===agenda.selDate }"

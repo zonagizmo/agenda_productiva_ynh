@@ -1,4 +1,4 @@
-VERSION      = "2.2.2"
+VERSION      = "2.3.0"
 RELEASE_DATE = "2026-05-22"
 
 _parts = VERSION.split(".")
