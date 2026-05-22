@@ -2,8 +2,8 @@
 source "${0%/*}/_common.sh"
 source /usr/share/yunohost/helpers
 
-ynh_restore_file "$install_dir"
-ynh_restore_file "$data_dir"
+ynh_restore "$install_dir"
+ynh_restore "$data_dir"
 
 chown -R "$app:www-data" "$install_dir"
 chown -R "$app:www-data" "$data_dir"
@@ -11,8 +11,20 @@ chown -R "$app:www-data" "$data_dir"
 mkdir -p "/var/log/$app"
 chown "$app:www-data" "/var/log/$app"
 
-ynh_config_add_nginx
-ynh_config_add_systemd
-ynh_config_add_logrotate
+mkdir -p /etc/nginx/conf.d/"$domain".d
+install -m 644 ../conf/nginx.conf /etc/nginx/conf.d/"$domain".d/"$app".conf
+sed -i -e "s|__APP__|$app|g" -e "s|__INSTALL_DIR__|$install_dir|g" \
+       -e "s|__PORT__|$port|g" -e "s|__PATH__|$path|g" -e "s|__DOMAIN__|$domain|g" \
+       /etc/nginx/conf.d/"$domain".d/"$app".conf
+nginx -t && systemctl reload nginx
+
+install -m 644 ../conf/systemd.service /etc/systemd/system/"$app".service
+sed -i -e "s|__APP__|$app|g" -e "s|__INSTALL_DIR__|$install_dir|g" \
+       -e "s|__DATA_DIR__|$data_dir|g" -e "s|__PORT__|$port|g" -e "s|__PATH__|$path|g" \
+       /etc/systemd/system/"$app".service
+systemctl daemon-reload
 systemctl enable "$app" --quiet
 systemctl start "$app"
+
+install -m 644 ../conf/logrotate /etc/logrotate.d/"$app"
+sed -i "s|__APP__|$app|g" /etc/logrotate.d/"$app"

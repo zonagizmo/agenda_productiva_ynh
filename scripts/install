@@ -18,16 +18,26 @@ mkdir -p "/var/log/$app"
 chown "$app:www-data" "/var/log/$app"
 
 # ── Nginx ─────────────────────────────────────────────────
-ynh_config_add_nginx
+mkdir -p /etc/nginx/conf.d/"$domain".d
+install -m 644 ../conf/nginx.conf /etc/nginx/conf.d/"$domain".d/"$app".conf
+sed -i -e "s|__APP__|$app|g" -e "s|__INSTALL_DIR__|$install_dir|g" \
+       -e "s|__PORT__|$port|g" -e "s|__PATH__|$path|g" -e "s|__DOMAIN__|$domain|g" \
+       /etc/nginx/conf.d/"$domain".d/"$app".conf
+nginx -t && systemctl reload nginx
 
 # ── Systemd ───────────────────────────────────────────────
-ynh_config_add_systemd
-yunohost service add "$app" --description="Agenda Productiva" --log="/var/log/$app/$app.log"
+install -m 644 ../conf/systemd.service /etc/systemd/system/"$app".service
+sed -i -e "s|__APP__|$app|g" -e "s|__INSTALL_DIR__|$install_dir|g" \
+       -e "s|__DATA_DIR__|$data_dir|g" -e "s|__PORT__|$port|g" -e "s|__PATH__|$path|g" \
+       /etc/systemd/system/"$app".service
+systemctl daemon-reload
 systemctl enable "$app" --quiet
 systemctl start "$app"
+yunohost service add "$app" --description="Agenda Productiva" --log="/var/log/$app/$app.log"
 
 # ── Logrotate ─────────────────────────────────────────────
-ynh_config_add_logrotate
+install -m 644 ../conf/logrotate /etc/logrotate.d/"$app"
+sed -i "s|__APP__|$app|g" /etc/logrotate.d/"$app"
 
 # ── Icono portal ──────────────────────────────────────────
 # YunoHost 12.1+: applogos/   YunoHost 12.0: portal/assets/apps/   SSOwat ≤11: ssowat/icons/

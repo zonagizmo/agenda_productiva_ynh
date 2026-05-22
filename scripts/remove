@@ -3,8 +3,14 @@ source "${0%/*}/_common.sh"
 source /usr/share/yunohost/helpers
 
 yunohost service remove "$app" 2>/dev/null || true
-ynh_config_remove_systemd
-ynh_config_remove_nginx
-ynh_config_remove_logrotate
 
+systemctl stop "$app" 2>/dev/null || true
+systemctl disable "$app" --quiet 2>/dev/null || true
+rm -f /etc/systemd/system/"$app".service
+systemctl daemon-reload
+
+rm -f /etc/nginx/conf.d/"$domain".d/"$app".conf
+nginx -t && systemctl reload nginx
+
+rm -f /etc/logrotate.d/"$app"
 rm -rf "/var/log/$app"
