@@ -39,6 +39,7 @@ onMounted(async () => {
     <div class="topbar-row1">
       <button v-if="ui.tab==='agenda'" class="menu-btn" @click="ui.sideOpen=!ui.sideOpen">☰</button>
       <span class="topbar-title">{{ T.appTitle }}</span>
+      <span v-if="ui.version" class="topbar-version">v{{ ui.version }}</span>
     </div>
     <div class="topbar-row2">
       <button v-for="(label, key) in T.tabs" :key="key"
@@ -56,5 +57,4 @@ onMounted(async () => {
     </div>
   </div>
 
-  <span id="version-tag" v-if="ui.version">v{{ ui.version }}</span>
 </template>

@@ -59,6 +59,11 @@ input[type=date], input[type=time] { color-scheme: dark; }
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 .topbar-row2 { display: flex; gap: .35rem; }
+.topbar-version {
+  font-size: .65rem; color: var(--muted); font-family: 'DM Sans', sans-serif;
+  background: var(--faint); border-radius: 100px; padding: 1px 7px;
+  align-self: center; flex-shrink: 0;
+}
 .tab-btn {
   flex: 1; padding: .4rem .3rem; border-radius: 8px; font-size: .75rem;
   font-weight: 600; border: 1px solid var(--border); background: var(--card);
