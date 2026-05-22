@@ -15,14 +15,15 @@ _apply_template() {
 }
 
 # ── Copiar fuentes ─────────────────────────────────────────
-cp -r ../sources/. "$install_dir/"
+cp -r ../sources/dist "$install_dir/dist"
+cp -r ../backend      "$install_dir/backend"
 chown -R "$app:www-data" "$install_dir"
 chmod -R o-rwx "$install_dir"
 
-# ── Crear virtualenv e instalar dependencias ───────────────
+# ── Crear virtualenv e instalar dependencias Python ────────
 python3 -m venv "$install_dir/venv"
 "$install_dir/venv/bin/pip" install --quiet --upgrade pip
-"$install_dir/venv/bin/pip" install --quiet -r "$install_dir/requirements.txt"
+"$install_dir/venv/bin/pip" install --quiet -r "$install_dir/backend/requirements.txt"
 
 # ── Systemd ────────────────────────────────────────────────
 install -m 644 ../conf/systemd.service /etc/systemd/system/"$app".service

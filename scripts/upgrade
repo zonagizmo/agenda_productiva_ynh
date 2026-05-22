@@ -16,13 +16,15 @@ _apply_template() {
 systemctl stop "$app"
 
 # ── Actualizar fuentes ─────────────────────────────────────
-cp -r ../sources/. "$install_dir/"
+rm -rf "$install_dir/dist" "$install_dir/backend"
+cp -r ../sources/dist "$install_dir/dist"
+cp -r ../backend      "$install_dir/backend"
 chown -R "$app:www-data" "$install_dir"
 chmod -R o-rwx "$install_dir"
 
 # ── Actualizar dependencias Python ─────────────────────────
 "$install_dir/venv/bin/pip" install --quiet --upgrade pip
-"$install_dir/venv/bin/pip" install --quiet -r "$install_dir/requirements.txt"
+"$install_dir/venv/bin/pip" install --quiet -r "$install_dir/backend/requirements.txt"
 
 # ── Regenerar configs ──────────────────────────────────────
 install -m 644 ../conf/systemd.service /etc/systemd/system/"$app".service
