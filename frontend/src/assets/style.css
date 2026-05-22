@@ -53,8 +53,9 @@ input[type=date], input[type=time] { color-scheme: dark; }
 .topbar-row1 {
   display: flex; align-items: center; gap: .6rem; margin-bottom: .45rem;
 }
+.topbar-brand { display: flex; align-items: center; gap: .4rem; flex: 1; }
 .topbar-title {
-  flex: 1; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
   background: linear-gradient(90deg,#fff,#4d96ff);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
@@ -383,6 +384,7 @@ input[type=date], input[type=time] { color-scheme: dark; }
 .rec-upcoming { background:#3a3a6a33; border-color:#3a3a6a88; color:var(--muted); }
 .rec-done     { background:#6bcb7722; border-color:#6bcb7755; color:var(--green); }
 .rec-expired  { background:#ff6b6b22; border-color:#ff6b6b55; color:var(--red); }
+.rec-interval-input { width:52px; background:#0a0a1a; border:1px solid var(--border); border-radius:6px; color:var(--text); padding:3px 6px; font-size:.78rem; font-family:inherit; text-align:center; }
 
 /* ── Config AI extras ────────────────────────────────────── */
 .prov-grid   { display:flex; gap:.4rem; flex-wrap:wrap; }

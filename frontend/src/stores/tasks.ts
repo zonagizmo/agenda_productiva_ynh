@@ -13,25 +13,26 @@ function newAviso(): Aviso {
 // ── Recurrence helpers (exported for use in components) ────
 
 export function addInterval(dateStr: string, rec: Recurrence, sign: 1 | -1): string {
-  const d = new Date(dateStr + 'T12:00:00')
+  const d   = new Date(dateStr + 'T12:00:00')
+  const n   = (rec.interval ?? 1) * sign
   const [, sm, sd] = rec.startDate.split('-')
-  const startDay = parseInt(sd)
+  const startDay   = parseInt(sd)
 
   switch (rec.type) {
     case 'daily':
-      d.setDate(d.getDate() + sign)
+      d.setDate(d.getDate() + n)
       break
     case 'weekly':
-      d.setDate(d.getDate() + 7 * sign)
+      d.setDate(d.getDate() + 7 * n)
       break
     case 'monthly': {
-      d.setMonth(d.getMonth() + sign)
+      d.setMonth(d.getMonth() + n)
       const max = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
       d.setDate(Math.min(startDay, max))
       break
     }
     case 'yearly': {
-      d.setFullYear(d.getFullYear() + sign)
+      d.setFullYear(d.getFullYear() + n)
       d.setMonth(parseInt(sm) - 1)
       const max = new Date(d.getFullYear(), parseInt(sm), 0).getDate()
       d.setDate(Math.min(startDay, max))
@@ -65,7 +66,7 @@ export function isRecurringExpired(task: Task): boolean {
 }
 
 export function newRecurrence(type: RecurrenceType): Recurrence {
-  return { type, startDate: todayKey(), endDate: '', lastCompleted: '' }
+  return { type, interval: 1, startDate: todayKey(), endDate: '', lastCompleted: '' }
 }
 
 // ─────────────────────────────────────────────────────────
@@ -117,7 +118,10 @@ export const useTasksStore = defineStore('tasks', () => {
     const t = await api.storage.get('tasks-v1')
     if (t.value) {
       const parsed = JSON.parse(t.value) as Task[]
-      tasks.value = parsed.map(t => ({ ...t, recurrence: t.recurrence ?? null }))
+      tasks.value = parsed.map(t => ({
+        ...t,
+        recurrence: t.recurrence ? { ...t.recurrence, interval: t.recurrence.interval ?? 1 } : null,
+      }))
     }
     const l = await api.storage.get('labels-v1')
     if (l.value) labels.value = JSON.parse(l.value) as Label[]
