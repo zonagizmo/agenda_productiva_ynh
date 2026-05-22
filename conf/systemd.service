@@ -13,9 +13,8 @@ Environment="AGENDA_DIST_DIR=__INSTALL_DIR__/dist"
 ExecStart=__INSTALL_DIR__/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port __PORT__ --no-access-log
 Restart=on-failure
 RestartSec=10
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=__APP__
+StandardOutput=append:/var/log/__APP__/__APP__.log
+StandardError=append:/var/log/__APP__/__APP__.log
 
 [Install]
 WantedBy=multi-user.target

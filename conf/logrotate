@@ -1,0 +1,9 @@
+/var/log/__APP__/*.log {
+    monthly
+    missingok
+    rotate 6
+    compress
+    delaycompress
+    notifempty
+    create 640 __APP__ www-data
+}

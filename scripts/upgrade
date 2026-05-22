@@ -2,43 +2,31 @@
 source "${0%/*}/_common.sh"
 source /usr/share/yunohost/helpers
 
-_apply_template() {
-    sed -i \
-        -e "s|__APP__|$app|g" \
-        -e "s|__INSTALL_DIR__|$install_dir|g" \
-        -e "s|__DATA_DIR__|$data_dir|g" \
-        -e "s|__PORT__|$port|g" \
-        -e "s|__PATH__|$path|g" \
-        -e "s|__DOMAIN__|$domain|g" \
-        "$1"
-}
+ynh_systemd_action --service_name="$app" --action="stop"
 
-systemctl stop "$app"
-
-# ── Actualizar fuentes ─────────────────────────────────────
+# ── Actualizar fuentes ────────────────────────────────────
 rm -rf "$install_dir/dist" "$install_dir/backend"
 cp -r ../sources/dist "$install_dir/dist"
 cp -r ../backend      "$install_dir/backend"
 chown -R "$app:www-data" "$install_dir"
 chmod -R o-rwx "$install_dir"
 
-# ── Actualizar dependencias Python ─────────────────────────
+# ── Actualizar dependencias Python ────────────────────────
 "$install_dir/venv/bin/pip" install --quiet --upgrade pip
 "$install_dir/venv/bin/pip" install --quiet -r "$install_dir/backend/requirements.txt"
 
-# ── Regenerar configs ──────────────────────────────────────
-install -m 644 ../conf/systemd.service /etc/systemd/system/"$app".service
-_apply_template /etc/systemd/system/"$app".service
-systemctl daemon-reload
+# ── Directorio de logs ────────────────────────────────────
+mkdir -p "/var/log/$app"
+chown "$app:www-data" "/var/log/$app"
 
-mkdir -p /etc/nginx/conf.d/"$domain".d
-install -m 644 ../conf/nginx.conf /etc/nginx/conf.d/"$domain".d/"$app".conf
-_apply_template /etc/nginx/conf.d/"$domain".d/"$app".conf
-nginx -t && systemctl reload nginx
+# ── Configs ───────────────────────────────────────────────
+ynh_config_add_nginx
+ynh_config_add_systemd
+ynh_config_add_logrotate
 
-systemctl start "$app"
+ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"
 
-# ── Icono portal (SSOwat ≤11 y YunoHost 12+) ──────────────
+# ── Icono portal (SSOwat ≤11 y YunoHost 12+) ─────────────
 for _icon_dir in \
     /usr/share/yunohost/portal/assets/apps \
     /usr/share/ssowat/portal/assets/icons; do
