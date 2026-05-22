@@ -26,8 +26,10 @@ ynh_config_add_logrotate
 
 ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"
 
-# ── Icono portal (SSOwat ≤11 y YunoHost 12+) ─────────────
+# ── Icono portal ──────────────────────────────────────────
+# YunoHost 12.1+: applogos/   YunoHost 12.0: portal/assets/apps/   SSOwat ≤11: ssowat/icons/
 for _icon_dir in \
+    /usr/share/yunohost/applogos \
     /usr/share/yunohost/portal/assets/apps \
     /usr/share/ssowat/portal/assets/icons; do
     mkdir -p "$_icon_dir"
