@@ -38,8 +38,20 @@ onMounted(async () => {
   <header id="topbar">
     <div class="topbar-row1">
       <button v-if="ui.tab==='agenda'" class="menu-btn" @click="ui.sideOpen=!ui.sideOpen">☰</button>
-      <span class="topbar-title">{{ T.appTitle }}</span>
-      <span v-if="ui.version" class="topbar-version">v{{ ui.version }}</span>
+      <div class="topbar-brand">
+        <span class="topbar-title">{{ T.appTitle }}</span>
+        <span v-if="ui.version" class="topbar-version">v{{ ui.version }}</span>
+      </div>
+      <button class="notif-btn" :class="notif.perm"
+        :title="notif.perm==='granted' ? T.notifStatusGranted : T.notifActivate"
+        @click="notif.request()">
+        {{ notif.perm==='denied' ? '🔕' : '🔔' }}
+      </button>
+      <div class="lang-toggle">
+        <button class="lang-btn" :class="{ active: ui.lang==='es' }" @click="ui.lang='es'">ES</button>
+        <button class="lang-btn" :class="{ active: ui.lang==='en' }" @click="ui.lang='en'">EN</button>
+      </div>
+      <a class="ynh-home-btn" href="/yunohost/sso" title="YunoHost">🏠</a>
     </div>
     <div class="topbar-row2">
       <button v-for="(label, key) in T.tabs" :key="key"

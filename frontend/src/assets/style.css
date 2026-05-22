@@ -92,6 +92,8 @@ input[type=date], input[type=time] { color-scheme: dark; }
   border:1px solid var(--border); background:none; color:var(--muted);
 }
 .lang-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.ynh-home-btn { border-radius:8px; padding:2px 7px; font-size:.82rem; border:1px solid var(--border); background:none; color:var(--muted); text-decoration:none; display:flex; align-items:center; flex-shrink:0; }
+.ynh-home-btn:hover { border-color:var(--accent); }
 
 /* ── Main body ───────────────────────────────────────────── */
 #main-body { display:flex; flex:1; overflow:hidden; }
