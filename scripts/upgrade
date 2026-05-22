@@ -2,7 +2,7 @@
 source "${0%/*}/_common.sh"
 source /usr/share/yunohost/helpers
 
-ynh_systemd_action --service_name="$app" --action="stop"
+systemctl stop "$app"
 
 # ── Actualizar fuentes ────────────────────────────────────
 rm -rf "$install_dir/dist" "$install_dir/backend"
@@ -24,7 +24,7 @@ ynh_config_add_nginx
 ynh_config_add_systemd
 ynh_config_add_logrotate
 
-ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"
+systemctl start "$app"
 
 # ── Icono portal ──────────────────────────────────────────
 # YunoHost 12.1+: applogos/   YunoHost 12.0: portal/assets/apps/   SSOwat ≤11: ssowat/icons/

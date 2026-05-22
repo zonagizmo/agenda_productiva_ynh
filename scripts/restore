@@ -14,4 +14,5 @@ chown "$app:www-data" "/var/log/$app"
 ynh_config_add_nginx
 ynh_config_add_systemd
 ynh_config_add_logrotate
-ynh_systemd_action --service_name="$app" --action="start" --log_path="/var/log/$app/$app.log"
+systemctl enable "$app" --quiet
+systemctl start "$app"
