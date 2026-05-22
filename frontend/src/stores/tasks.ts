@@ -49,14 +49,13 @@ export function recurrenceCurrentDue(task: Task): string | null {
   return addInterval(rec.lastCompleted, rec, 1)
 }
 
-export function isRecurringDue(task: Task): boolean {
+export function isRecurringDue(task: Task, asOf = todayKey()): boolean {
   const rec = task.recurrence
   if (!rec || task.done) return false
-  const today = todayKey()
-  if (today < rec.startDate) return false
-  if (rec.endDate && today > rec.endDate) return false
+  if (asOf < rec.startDate) return false
+  if (rec.endDate && asOf > rec.endDate) return false
   const due = recurrenceCurrentDue(task)
-  return !!due && today >= due
+  return !!due && asOf >= due
 }
 
 export function isRecurringExpired(task: Task): boolean {
@@ -191,8 +190,7 @@ export const useTasksStore = defineStore('tasks', () => {
     saveLabels(); saveTasks()
   }
 
-  function pendingForAi() {
-    const today = todayKey()
+  function pendingForAi(selDate: string) {
     const mapTask = (t: Task) => ({
       texto: t.texto,
       prioridad: t.prioridad,
@@ -201,16 +199,16 @@ export const useTasksStore = defineStore('tasks', () => {
     })
     const pending = tasks.value.filter(t => !t.done && t.texto.trim())
 
-    // Tareas que deben hacerse HOY: recurrentes vencidas hoy + fecha hoy/vencida
+    // Tareas para ese día: recurrentes vencidas en selDate + dueDate <= selDate
     const hoy = pending.filter(t =>
       t.recurrence
-        ? isRecurringDue(t)
-        : (t.dueDate === today || (!!t.dueDate && t.dueDate < today)),
+        ? isRecurringDue(t, selDate)
+        : (!!t.dueDate && t.dueDate <= selDate),
     ).map(mapTask)
 
-    // Backlog: sin recurrencia, sin fecha o fecha futura
+    // Backlog: sin recurrencia y sin fecha o fecha posterior a selDate
     const backlog = pending.filter(t =>
-      !t.recurrence && (!t.dueDate || t.dueDate > today),
+      !t.recurrence && (!t.dueDate || t.dueDate > selDate),
     ).map(mapTask)
 
     return { hoy, backlog }
