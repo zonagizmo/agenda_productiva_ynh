@@ -42,7 +42,8 @@ async function generate() {
       jornada_inicio: cfg.config.jornadaInicio, jornada_fin: cfg.config.jornadaFin,
       pausa_comida: cfg.config.pausaComida, pausa_inicio: cfg.config.pausaInicio, pausa_fin: cfg.config.pausaFin,
       notas_extra: cfg.config.notas,
-      tareas_persistentes: tasks.pendingForAi(),
+      tareas_hoy: tasks.pendingForAi().hoy,
+      tareas_backlog: tasks.pendingForAi().backlog,
     }
     secs.forEach(s => { body[s.key] = agenda.day[s.key].map(x => ({ texto: x.texto, avisos: x.avisos })) })
 

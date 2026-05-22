@@ -192,15 +192,28 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   function pendingForAi() {
-    return tasks.value
-      .filter(t => !t.done && t.texto.trim())
-      .filter(t => !t.recurrence || isRecurringDue(t))
-      .map(t => ({
-        texto: t.texto,
-        prioridad: t.prioridad,
-        dueDate: t.dueDate || (t.recurrence ? (recurrenceCurrentDue(t) || '') : ''),
-        label_names: t.labels.map(lid => getLabelById(lid)?.nombre ?? '').filter(Boolean),
-      }))
+    const today = todayKey()
+    const mapTask = (t: Task) => ({
+      texto: t.texto,
+      prioridad: t.prioridad,
+      dueDate: t.dueDate || (t.recurrence ? (recurrenceCurrentDue(t) || '') : ''),
+      label_names: t.labels.map(lid => getLabelById(lid)?.nombre ?? '').filter(Boolean),
+    })
+    const pending = tasks.value.filter(t => !t.done && t.texto.trim())
+
+    // Tareas que deben hacerse HOY: recurrentes vencidas hoy + fecha hoy/vencida
+    const hoy = pending.filter(t =>
+      t.recurrence
+        ? isRecurringDue(t)
+        : (t.dueDate === today || (!!t.dueDate && t.dueDate < today)),
+    ).map(mapTask)
+
+    // Backlog: sin recurrencia, sin fecha o fecha futura
+    const backlog = pending.filter(t =>
+      !t.recurrence && (!t.dueDate || t.dueDate > today),
+    ).map(mapTask)
+
+    return { hoy, backlog }
   }
 
   return {
