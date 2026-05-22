@@ -27,6 +27,15 @@ export interface DayData {
   generatedAt: string | null
 }
 
+export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly'
+
+export interface Recurrence {
+  type: RecurrenceType
+  startDate: string      // YYYY-MM-DD, obligatoria
+  endDate: string        // YYYY-MM-DD o '' (sin fin)
+  lastCompleted: string  // YYYY-MM-DD o '' (nunca completada)
+}
+
 export interface Task {
   id: string
   texto: string
@@ -36,6 +45,7 @@ export interface Task {
   labels: string[]
   avisos: Aviso[]
   createdAt: string
+  recurrence: Recurrence | null
 }
 
 export interface Label {

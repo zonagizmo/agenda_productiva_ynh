@@ -26,7 +26,11 @@ onMounted(async () => {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* ignore */ })
   }
   notif.check(ui.lang)
-  setInterval(() => notif.check(ui.lang), 60_000)
+  tasks.checkAndResetRecurring()
+  setInterval(() => {
+    notif.check(ui.lang)
+    tasks.checkAndResetRecurring()
+  }, 60_000)
 })
 </script>
 

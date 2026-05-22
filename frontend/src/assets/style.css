@@ -372,6 +372,13 @@ input[type=date], input[type=time] { color-scheme: dark; }
   color:var(--purple); padding:4px 10px; font-size:.78rem; font-weight:700; cursor:pointer;
 }
 
+/* ── Recurrence chips ────────────────────────────────────── */
+.rec-chip     { border-radius:100px; padding:1px 7px; font-size:.67rem; font-weight:600; border:1px solid; white-space:nowrap; }
+.rec-today    { background:#c77dff22; border-color:#c77dff55; color:var(--purple); }
+.rec-upcoming { background:#3a3a6a33; border-color:#3a3a6a88; color:var(--muted); }
+.rec-done     { background:#6bcb7722; border-color:#6bcb7755; color:var(--green); }
+.rec-expired  { background:#ff6b6b22; border-color:#ff6b6b55; color:var(--red); }
+
 /* ── Config AI extras ────────────────────────────────────── */
 .prov-grid   { display:flex; gap:.4rem; flex-wrap:wrap; }
 .prov-btn    {
