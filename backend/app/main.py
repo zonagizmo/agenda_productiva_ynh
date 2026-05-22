@@ -8,7 +8,9 @@ from .routers import storage, providers, prompt
 from .version import get_version_info
 
 PATH_PREFIX = os.environ.get("APP_PATH", "").rstrip("/")
-DIST_DIR    = Path(__file__).parent.parent.parent / "sources" / "dist"
+# En desarrollo: sources/dist (salida de Vite). En servidor: AGENDA_DIST_DIR apunta a install_dir/dist
+_default_dist = Path(__file__).parent.parent.parent / "sources" / "dist"
+DIST_DIR      = Path(os.environ.get("AGENDA_DIST_DIR", str(_default_dist)))
 
 app = FastAPI(docs_url=None, redoc_url=None)
 

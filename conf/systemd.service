@@ -9,6 +9,7 @@ Group=www-data
 WorkingDirectory=__INSTALL_DIR__/backend
 Environment="AGENDA_DATA_DIR=__DATA_DIR__"
 Environment="APP_PATH=__PATH__"
+Environment="AGENDA_DIST_DIR=__INSTALL_DIR__/dist"
 ExecStart=__INSTALL_DIR__/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port __PORT__ --no-access-log
 Restart=on-failure
 RestartSec=10
