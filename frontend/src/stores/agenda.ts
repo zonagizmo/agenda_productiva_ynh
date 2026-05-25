@@ -39,7 +39,21 @@ export const useAgendaStore = defineStore('agenda', () => {
   const day = computed(() => data.value[selDate.value] ?? emptyDay())
 
   function ensureDay() {
-    if (!data.value[selDate.value]) data.value[selDate.value] = emptyDay()
+    if (!data.value[selDate.value]) {
+      // Preservar los items que el usuario haya escrito en el fallback emptyDay()
+      // antes de que se cree la entrada real en data.value.
+      // day.value devuelve el valor cacheado (sin recomputar) porque ninguna
+      // dependencia reactiva ha cambiado todavía.
+      const cur = day.value
+      data.value[selDate.value] = {
+        objetivos:   cur.objetivos.map(i => ({ ...i })),
+        tareas:      cur.tareas.map(i => ({ ...i })),
+        reuniones:   cur.reuniones.map(i => ({ ...i })),
+        plazos:      cur.plazos.map(i => ({ ...i })),
+        plan:        cur.plan,
+        generatedAt: cur.generatedAt,
+      }
+    }
     return data.value[selDate.value]
   }
 
