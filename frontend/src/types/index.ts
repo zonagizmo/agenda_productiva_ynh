@@ -31,6 +31,7 @@ export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly'
 
 export interface Recurrence {
   type: RecurrenceType
+  interval: number       // cada N unidades (1 = cada semana, 2 = cada 2 semanas…)
   startDate: string      // YYYY-MM-DD, obligatoria
   endDate: string        // YYYY-MM-DD o '' (sin fin)
   lastCompleted: string  // YYYY-MM-DD o '' (nunca completada)

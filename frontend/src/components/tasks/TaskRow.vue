@@ -38,6 +38,19 @@ const REC_TYPES = computed(() => [
   { key: 'yearly'  as RecurrenceType, label: ui.lang==='es' ? 'Anual'    : 'Yearly'  },
 ])
 
+const intervalUnit = computed(() => {
+  const n = props.task.recurrence?.interval ?? 1
+  const es = ui.lang === 'es'
+  const units: Record<RecurrenceType, [string, string]> = {
+    daily:   es ? ['día', 'días']       : ['day',   'days'],
+    weekly:  es ? ['semana', 'semanas'] : ['week',  'weeks'],
+    monthly: es ? ['mes', 'meses']      : ['month', 'months'],
+    yearly:  es ? ['año', 'años']       : ['year',  'years'],
+  }
+  const type = props.task.recurrence?.type ?? 'daily'
+  return n === 1 ? units[type][0] : units[type][1]
+})
+
 function setRecType(type: RecurrenceType) {
   if (props.task.recurrence?.type === type) return
   props.task.recurrence = newRecurrence(type)
@@ -124,15 +137,15 @@ const recChip = computed(() => {
         </button>
       </div>
 
-      <!-- Due date -->
-      <div class="task-detail-row">
+      <!-- Due date — solo si no hay recurrencia -->
+      <div v-if="!task.recurrence" class="task-detail-row">
         <span class="task-detail-label">{{ T().dueDateLabel }}</span>
         <input type="date" class="task-due-input" :value="task.dueDate"
           @change="task.dueDate=($event.target as HTMLInputElement).value; store.saveTasks()" />
         <button v-if="task.dueDate" class="item-del" @click="task.dueDate=''; store.saveTasks()">✕</button>
       </div>
 
-      <!-- Recurrence -->
+      <!-- Recurrence type -->
       <div class="task-detail-row" style="flex-wrap:wrap;gap:.35rem">
         <span class="task-detail-label">{{ ui.lang==='es'?'Repetir':'Repeat' }}</span>
         <button class="prior-btn" :class="{ active: !task.recurrence }"
@@ -144,12 +157,24 @@ const recChip = computed(() => {
       </div>
 
       <template v-if="task.recurrence">
+        <!-- Interval -->
+        <div class="task-detail-row">
+          <span class="task-detail-label">{{ ui.lang==='es'?'Cada':'Every' }}</span>
+          <input type="number" class="rec-interval-input" min="1" max="365"
+            :value="task.recurrence.interval"
+            @change="task.recurrence!.interval=Math.max(1,parseInt(($event.target as HTMLInputElement).value)||1); store.saveTasks()" />
+          <span style="font-size:.78rem;color:var(--muted)">{{ intervalUnit }}</span>
+        </div>
+
+        <!-- Start date -->
         <div class="task-detail-row">
           <span class="task-detail-label" style="color:#c77dff">{{ ui.lang==='es'?'Inicio':'Start' }} *</span>
           <input type="date" class="task-due-input"
             :value="task.recurrence.startDate"
             @change="task.recurrence!.startDate=($event.target as HTMLInputElement).value; store.saveTasks()" />
         </div>
+
+        <!-- End date -->
         <div class="task-detail-row">
           <span class="task-detail-label">{{ ui.lang==='es'?'Fin':'End' }}</span>
           <input type="date" class="task-due-input"

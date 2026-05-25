@@ -226,7 +226,7 @@ export const useTasksStore = defineStore('tasks', () => {
       !t.recurrence && (!t.dueDate || t.dueDate > selDate),
     ).map(mapTask)
 
-    return { hoy, backlog }
+    return { tareas_hoy: hoy, tareas_backlog: backlog }
   }
 
   return {
