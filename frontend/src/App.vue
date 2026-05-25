@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import AgendaView    from '@/components/agenda/AgendaView.vue'
 import TareasView    from '@/components/tasks/TareasView.vue'
 import HistorialView from '@/components/historial/HistorialView.vue'
 import ConfigView    from '@/components/config/ConfigView.vue'
+import CapacitorSetup from '@/components/CapacitorSetup.vue'
 import { useUiStore }     from '@/stores/ui'
 import { useAgendaStore } from '@/stores/agenda'
 import { useTasksStore }  from '@/stores/tasks'
@@ -11,6 +12,8 @@ import { useConfigStore } from '@/stores/config'
 import { useNotifStore }  from '@/stores/notifications'
 import { LANG } from '@/i18n'
 import { api } from '@/api/client'
+import { Capacitor } from '@capacitor/core'
+import { Preferences } from '@capacitor/preferences'
 
 const ui     = useUiStore()
 const agenda = useAgendaStore()
@@ -19,7 +22,22 @@ const cfg    = useConfigStore()
 const notif  = useNotifStore()
 const T      = computed(() => LANG[ui.lang])
 
+const showSetup = ref(false)  // native: no server URL configured yet
+const appReady  = ref(false)  // web: app fully initialized
+
 onMounted(async () => {
+  if (Capacitor.isNativePlatform()) {
+    const { value } = await Preferences.get({ key: 'serverUrl' })
+    if (value) {
+      // Navigate WebView to the server — SSO handles auth naturally
+      window.location.href = value
+    } else {
+      showSetup.value = true
+    }
+    return
+  }
+
+  // Web / YunoHost mode
   try { const v = await api.version(); ui.version = v.version ?? '' } catch { /* ignore */ }
   await Promise.all([agenda.load(), tasks.load(), cfg.load()])
   if ('serviceWorker' in navigator) {
@@ -31,10 +49,17 @@ onMounted(async () => {
     notif.check(ui.lang)
     tasks.checkAndResetRecurring()
   }, 60_000)
+  appReady.value = true
 })
 </script>
 
 <template>
+  <!-- Native: server setup screen -->
+  <CapacitorSetup v-if="showSetup" />
+
+  <!-- Web mode OR native redirecting (dark screen during redirect) -->
+  <template v-else-if="appReady || !Capacitor.isNativePlatform()">
+
   <header id="topbar">
     <div class="topbar-row1">
       <button v-if="ui.tab==='agenda'" class="menu-btn" @click="ui.sideOpen=!ui.sideOpen">☰</button>
@@ -69,4 +94,5 @@ onMounted(async () => {
     </div>
   </div>
 
+  </template><!-- end v-else-if appReady -->
 </template>
