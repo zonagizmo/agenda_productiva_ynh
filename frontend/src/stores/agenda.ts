@@ -105,5 +105,29 @@ export const useAgendaStore = defineStore('agenda', () => {
     return ['objetivos','tareas','reuniones','plazos'].some(s => (d[s as keyof DayData] as AgendaItem[]).some(x => x.texto))
   }
 
-  return { data, selDate, calCursor, day, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone }
+  function rolloverToNextWorkday(fromDate: string, workDays: number[]): { count: number; targetDate: string } {
+    const days = workDays.length ? workDays : [1, 2, 3, 4, 5]
+    const d = new Date(fromDate + 'T12:00:00')
+    do { d.setDate(d.getDate() + 1) } while (!days.includes(d.getDay()))
+    const targetDate = d.toISOString().slice(0, 10)
+
+    const src = data.value[fromDate]
+    if (!src) return { count: 0, targetDate }
+
+    if (!data.value[targetDate]) data.value[targetDate] = emptyDay()
+
+    let count = 0
+    for (const k of ['objetivos', 'tareas', 'reuniones', 'plazos'] as const) {
+      for (const item of src[k]) {
+        if (!item.texto.trim() || item.done || item.deferred) continue
+        item.deferred = true
+        data.value[targetDate][k].push(newItem(item.texto))
+        count++
+      }
+    }
+    if (count) save()
+    return { count, targetDate }
+  }
+
+  return { data, selDate, calCursor, day, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday }
 })

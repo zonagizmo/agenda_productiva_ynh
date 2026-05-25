@@ -20,8 +20,10 @@ const ui     = useUiStore()
 const notif  = useNotifStore()
 const T      = computed(() => LANG[ui.lang])
 
-const generating = ref(false)
-const error      = ref('')
+const generating   = ref(false)
+const error        = ref('')
+const rolloverMsg  = ref('')
+let   rolloverTimer: ReturnType<typeof setTimeout> | null = null
 
 const dayLabel = computed(() => {
   const k = agenda.selDate
@@ -93,6 +95,26 @@ const allDayItems = computed<DayPanelEntry[]>(() => {
 })
 
 function prioColor(p: Priority) { return p==='alta'?'#ff6b6b':p==='media'?'#ff9f43':'#6bcb77' }
+
+const hasRolloverItems = computed(() => {
+  const d = agenda.data[agenda.selDate]
+  if (!d) return false
+  return (['objetivos','tareas','reuniones','plazos'] as const).some(k =>
+    d[k].some(x => x.texto.trim() && !x.done && !x.deferred)
+  )
+})
+
+function doRollover() {
+  const workDays: number[] = cfg.config.diasLaborables?.length ? cfg.config.diasLaborables : [1,2,3,4,5]
+  const { count, targetDate } = agenda.rolloverToNextWorkday(agenda.selDate, workDays)
+  if (!count) return
+  const dateStr = fmtShort(targetDate, ui.lang)
+  rolloverMsg.value = ui.lang === 'es'
+    ? `↪ ${count} ítem${count > 1 ? 's' : ''} ${T.value.rolloverDone} ${dateStr}`
+    : `↪ ${count} item${count > 1 ? 's' : ''} ${T.value.rolloverDone} ${dateStr}`
+  if (rolloverTimer) clearTimeout(rolloverTimer)
+  rolloverTimer = setTimeout(() => { rolloverMsg.value = '' }, 4500)
+}
 </script>
 
 <template>
@@ -230,6 +252,12 @@ function prioColor(p: Priority) { return p==='alta'?'#ff6b6b':p==='media'?'#ff9f
         <!-- Plan -->
         <PlanCard v-if="agenda.day.plan" :plan="agenda.day.plan"
           @regen="generate" @delete="agenda.setPlan(null)" />
+
+        <!-- Rollover -->
+        <button v-if="hasRolloverItems" class="rollover-btn" @click="doRollover">
+          {{ T.rolloverBtn }}
+        </button>
+        <p v-if="rolloverMsg" class="rollover-msg">{{ rolloverMsg }}</p>
       </div>
     </div>
   </div>

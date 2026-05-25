@@ -36,7 +36,7 @@ function toggleBell() {
 </script>
 
 <template>
-  <div class="item-row fade">
+  <div class="item-row fade" :class="{ 'item-deferred': item.deferred }">
     <div class="item-main">
       <span class="item-dot" :style="{ color: section.color }">•</span>
       <input
@@ -48,6 +48,7 @@ function toggleBell() {
         @focus="($event.target as HTMLInputElement).style.borderColor = section.color"
         @blur="($event.target as HTMLInputElement).style.borderColor = ''"
       />
+      <span v-if="item.deferred" class="item-deferred-tag" title="Aplazado al día siguiente">↪</span>
       <button
         class="item-bell"
         :class="{ 'has-avisos': hasAvisos() }"

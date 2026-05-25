@@ -155,6 +155,20 @@ input[type=date], input[type=time] { color-scheme: dark; }
 .day-task-text { font-size:.78rem; color:var(--text); flex:1; line-height:1.3; word-break:break-word; }
 .day-task-text.done-text { text-decoration:line-through; color:var(--muted); }
 
+/* ── Deferred items ──────────────────────────────────────── */
+.item-deferred .item-input { color:var(--muted); font-style:italic; }
+.item-deferred-tag { font-size:.68rem; color:var(--muted); opacity:.75; flex-shrink:0; }
+
+/* ── Rollover button ─────────────────────────────────────── */
+.rollover-btn {
+  width:100%; padding:.7rem; border-radius:10px; margin-top:.5rem;
+  border:1px solid #ff9f4344; background:#ff9f4309; color:var(--orange);
+  font-size:.85rem; font-weight:600; font-family:'Syne',sans-serif;
+  display:flex; align-items:center; justify-content:center; gap:.4rem;
+}
+.rollover-btn:hover { background:#ff9f4318; }
+.rollover-msg { text-align:center; font-size:.78rem; color:var(--orange); padding:.35rem .5rem; animation:fadeUp .3s ease; }
+
 /* ── Avisos panel ────────────────────────────────────────── */
 .aviso-card {
   border-radius:10px; padding:.6rem .8rem; margin-bottom:.5rem; cursor:pointer;

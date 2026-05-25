@@ -32,6 +32,7 @@ interface Translations {
   // Config AI
   providerLabel: string; modelLabel: string; testBtn: string; testing: string
   freeNote: string
+  rolloverBtn: string; rolloverDone: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -77,6 +78,7 @@ export const LANG: Record<Lang, Translations> = {
     dueDateLabel: 'Vence', allFilter: 'Todas', addLabelToTask: '+ etiqueta',
     labelsTitle: '🏷️ Etiquetas', addLabel: '+ Nueva etiqueta', labelNamePH: 'Nombre...', backlogSection: '🔖 Tareas pendientes (backlog)',
     providerLabel: 'Proveedor', modelLabel: 'Modelo', testBtn: 'Probar conexión', testing: 'Probando...', freeNote: '✓ = Gratis con cuenta',
+    rolloverBtn: '⏩ Pasar pendientes al día siguiente', rolloverDone: 'aplazado(s) al',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -107,5 +109,6 @@ export const LANG: Record<Lang, Translations> = {
     dueDateLabel: 'Due', allFilter: 'All', addLabelToTask: '+ label',
     labelsTitle: '🏷️ Labels', addLabel: '+ New label', labelNamePH: 'Label name...', backlogSection: '🔖 Pending backlog tasks',
     providerLabel: 'Provider', modelLabel: 'Model', testBtn: 'Test connection', testing: 'Testing...', freeNote: '✓ = Free with account',
+    rolloverBtn: '⏩ Roll pending to next workday', rolloverDone: 'moved to',
   },
 }
