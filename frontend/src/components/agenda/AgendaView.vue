@@ -11,7 +11,7 @@ import { LANG } from '@/i18n'
 import { api } from '@/api/client'
 import { callAiDirect } from '@/composables/useAiCall'
 import { isToday, isPast, fmtLong, fmtShort, todayKey } from '@/composables/useDate'
-import type { Priority } from '@/types'
+import type { Priority, AgendaItem } from '@/types'
 
 const agenda = useAgendaStore()
 const tasks  = useTasksStore()
@@ -68,7 +68,28 @@ const recentDays = computed(() =>
     .sort((a,b) => b.localeCompare(a)).slice(0,6)
 )
 
-const dayTasks = computed(() => tasks.tasksForDay(agenda.selDate))
+type DayPanelEntry =
+  | { source: 'task';   id: string; texto: string; done: boolean; prioridad: Priority; toggle: () => void }
+  | { source: 'agenda'; id: string; texto: string; done: boolean; icon: string; section: string; toggle: () => void }
+
+const allDayItems = computed<DayPanelEntry[]>(() => {
+  const result: DayPanelEntry[] = []
+
+  for (const t of tasks.tasksForDay(agenda.selDate)) {
+    result.push({ source: 'task', id: t.id, texto: t.texto, done: t.done, prioridad: t.prioridad, toggle: () => tasks.toggleDone(t.id) })
+  }
+
+  const SECTIONS = T.value.sections
+  for (const sec of SECTIONS) {
+    const items = agenda.day[sec.key] as AgendaItem[]
+    for (const item of items) {
+      if (!item.texto.trim()) continue
+      result.push({ source: 'agenda', id: item.id, texto: item.texto, done: !!item.done, icon: sec.icon, section: sec.key, toggle: () => agenda.toggleItemDone(sec.key, item.id) })
+    }
+  }
+
+  return result.sort((a, b) => Number(a.done) - Number(b.done))
+})
 
 function prioColor(p: Priority) { return p==='alta'?'#ff6b6b':p==='media'?'#ff9f43':'#6bcb77' }
 </script>
@@ -110,13 +131,14 @@ function prioColor(p: Priority) { return p==='alta'?'#ff6b6b':p==='media'?'#ff9f
           <button class="goto-today" @click="agenda.selDate=todayKey()">{{ T.goToday }}</button>
 
           <!-- Tareas del día seleccionado -->
-          <div v-if="dayTasks.length" class="day-tasks-panel">
+          <div v-if="allDayItems.length" class="day-tasks-panel">
             <p class="day-tasks-title">{{ T.dayTasksTitle }}</p>
-            <div v-for="t in dayTasks" :key="t.id" class="day-task-item" :class="{ 'day-task-done': t.done }">
-              <button class="day-task-check" :class="{ done: t.done }"
-                :style="t.done ? '' : `border-color:${prioColor(t.prioridad)};`"
-                @click="tasks.toggleDone(t.id)">{{ t.done ? '✓' : '' }}</button>
-              <span class="day-task-text" :class="{ 'done-text': t.done }">{{ t.texto || '…' }}</span>
+            <div v-for="entry in allDayItems" :key="entry.id" class="day-task-item" :class="{ 'day-task-done': entry.done }">
+              <button class="day-task-check" :class="{ done: entry.done }"
+                :style="entry.done ? '' : (entry.source==='task' ? `border-color:${prioColor(entry.prioridad)};` : '')"
+                @click="entry.toggle()">{{ entry.done ? '✓' : '' }}</button>
+              <span v-if="entry.source==='agenda'" class="day-task-icon">{{ entry.icon }}</span>
+              <span class="day-task-text" :class="{ 'done-text': entry.done }">{{ entry.texto || '…' }}</span>
             </div>
           </div>
 

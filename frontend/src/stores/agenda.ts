@@ -78,6 +78,12 @@ export const useAgendaStore = defineStore('agenda', () => {
     selDate.value = d.toISOString().slice(0, 10)
   }
 
+  function toggleItemDone(section: keyof Pick<DayData,'objetivos'|'tareas'|'reuniones'|'plazos'>, id: string) {
+    const d = ensureDay()
+    const item = d[section].find(x => x.id === id)
+    if (item) { item.done = !item.done; save() }
+  }
+
   function hasPlan(k: string) { return !!data.value[k]?.plan }
   function hasData(k: string) {
     const d = data.value[k]
@@ -85,5 +91,5 @@ export const useAgendaStore = defineStore('agenda', () => {
     return ['objetivos','tareas','reuniones','plazos'].some(s => (d[s as keyof DayData] as AgendaItem[]).some(x => x.texto))
   }
 
-  return { data, selDate, calCursor, day, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem }
+  return { data, selDate, calCursor, day, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone }
 })

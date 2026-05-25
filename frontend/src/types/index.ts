@@ -15,6 +15,7 @@ export interface Aviso {
 export interface AgendaItem {
   id: string
   texto: string
+  done?: boolean
   avisos: Aviso[]
 }
 
