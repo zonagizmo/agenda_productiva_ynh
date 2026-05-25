@@ -76,7 +76,8 @@ const allDayItems = computed<DayPanelEntry[]>(() => {
   const result: DayPanelEntry[] = []
 
   for (const t of tasks.tasksForDay(agenda.selDate)) {
-    result.push({ source: 'task', id: t.id, texto: t.texto, done: t.done, prioridad: t.prioridad, toggle: () => tasks.toggleDone(t.id) })
+    const isDone = t.recurrence ? (t.done && !!t.recurrence.lastCompleted && t.recurrence.lastCompleted === agenda.selDate) : t.done
+    result.push({ source: 'task', id: t.id, texto: t.texto, done: isDone, prioridad: t.prioridad, toggle: () => tasks.toggleDone(t.id) })
   }
 
   const SECTIONS = T.value.sections

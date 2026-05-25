@@ -51,7 +51,7 @@ export function recurrenceCurrentDue(task: Task): string | null {
 
 export function isRecurringDue(task: Task, asOf = todayKey()): boolean {
   const rec = task.recurrence
-  if (!rec || task.done) return false
+  if (!rec) return false
   if (asOf < rec.startDate) return false
   if (rec.endDate && asOf > rec.endDate) return false
   const due = recurrenceCurrentDue(task)
@@ -192,6 +192,9 @@ export const useTasksStore = defineStore('tasks', () => {
 
   function tasksForDay(selDate: string): Task[] {
     const prioOrder: Record<Priority, number> = { alta: 0, media: 1, baja: 2 }
+    const doneForDate = (t: Task) => t.recurrence
+      ? (t.done && t.recurrence.lastCompleted === selDate)
+      : t.done
     return tasks.value
       .filter(t => {
         if (t.recurrence) {
@@ -200,7 +203,9 @@ export const useTasksStore = defineStore('tasks', () => {
         return !!t.dueDate && (t.dueDate === selDate || (t.dueDate < selDate && !t.done))
       })
       .sort((a, b) => {
-        if (a.done !== b.done) return a.done ? 1 : -1
+        const aDone = doneForDate(a)
+        const bDone = doneForDate(b)
+        if (aDone !== bDone) return aDone ? 1 : -1
         return prioOrder[a.prioridad] - prioOrder[b.prioridad]
       })
   }
@@ -212,7 +217,11 @@ export const useTasksStore = defineStore('tasks', () => {
       dueDate: t.dueDate || (t.recurrence ? (recurrenceCurrentDue(t) || '') : ''),
       label_names: t.labels.map(lid => getLabelById(lid)?.nombre ?? '').filter(Boolean),
     })
-    const pending = tasks.value.filter(t => !t.done && t.texto.trim())
+    // For recurring tasks, "done" is date-scoped: only considered done if lastCompleted === selDate
+    const isDoneForDate = (t: Task) => t.recurrence
+      ? (t.done && t.recurrence.lastCompleted === selDate)
+      : t.done
+    const pending = tasks.value.filter(t => !isDoneForDate(t) && t.texto.trim())
 
     // Tareas para ese día: recurrentes vencidas en selDate + dueDate <= selDate
     const hoy = pending.filter(t =>
