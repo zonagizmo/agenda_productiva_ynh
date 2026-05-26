@@ -120,6 +120,9 @@ function doRollover() {
 <template>
   <div id="agenda-view" style="display:flex;flex:1;overflow:hidden">
 
+    <!-- Mobile backdrop -->
+    <div v-if="ui.sideOpen" class="sidebar-backdrop" @click="ui.sideOpen=false" />
+
     <!-- Sidebar -->
     <div id="sidebar" :class="{ hidden: !ui.sideOpen }">
       <div class="sidebar-tabs" id="sidebar-tabs">

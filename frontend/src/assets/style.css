@@ -442,9 +442,63 @@ input[type=date], input[type=time] { color-scheme: dark; }
   z-index: 9999;
 }
 
+/* ── Sidebar backdrop (mobile only) ─────────────────────── */
+.sidebar-backdrop { display:none; }
+
 /* ── Responsive ──────────────────────────────────────────── */
-@media (max-width: 600px) {
-  #sidebar { position:absolute; z-index:50; height:calc(100% - 100px); top:100px; left:0; }
-  #main-panel { padding:.9rem .8rem; }
-  .date-title { font-size:1rem; }
+@media (max-width: 640px) {
+
+  /* Topbar */
+  .topbar-version { display:none; }
+  .topbar-row2 { gap:.2rem; }
+  .tab-btn { font-size:.68rem; padding:.38rem .2rem; }
+
+  /* Sidebar — drawer desde la izquierda */
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 82%; max-width: 300px;
+    height: 100%;
+    z-index: 200;
+    transform: translateX(0);
+    transition: transform .25s ease;
+    border-right: 1px solid var(--border);
+  }
+  #sidebar.hidden {
+    width: 82%;
+    min-width: unset;
+    border-right: 1px solid var(--border);
+    transform: translateX(-110%);
+  }
+
+  /* Backdrop oscuro detrás del drawer */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 199;
+  }
+
+  /* Main panel — ocupa todo el ancho */
+  #main-panel { padding:.9rem .75rem; }
+  .main-inner  { max-width:100%; }
+
+  /* Fecha y navegación */
+  .date-title  { font-size:1rem; }
+  .date-header { margin-bottom:.8rem; }
+
+  /* Secciones */
+  .sections-card { padding:.85rem .75rem; }
+  .section-label { font-size:.8rem; }
+  .item-input    { font-size:.88rem; }
+
+  /* Botón generar */
+  .gen-btn { font-size:.88rem; padding:.85rem; }
+
+  /* Plan card */
+  .plan-card { padding:.9rem .8rem; }
+
+  /* Rollover */
+  .rollover-btn { font-size:.8rem; }
 }
