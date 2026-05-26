@@ -5,13 +5,14 @@ import TareasView    from '@/components/tasks/TareasView.vue'
 import HistorialView from '@/components/historial/HistorialView.vue'
 import ConfigView    from '@/components/config/ConfigView.vue'
 import CapacitorSetup from '@/components/CapacitorSetup.vue'
+import NativeLogin    from '@/components/NativeLogin.vue'
 import { useUiStore }     from '@/stores/ui'
 import { useAgendaStore } from '@/stores/agenda'
 import { useTasksStore }  from '@/stores/tasks'
 import { useConfigStore } from '@/stores/config'
 import { useNotifStore }  from '@/stores/notifications'
 import { LANG } from '@/i18n'
-import { api } from '@/api/client'
+import { api, initNativeApi, AuthError } from '@/api/client'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 
@@ -22,42 +23,43 @@ const cfg    = useConfigStore()
 const notif  = useNotifStore()
 const T      = computed(() => LANG[ui.lang])
 
-const showSetup = ref(false)  // native: no server URL configured yet
-const appReady  = ref(false)  // web: app fully initialized
+const showSetup   = ref(false)
+const showLogin   = ref(false)
+const appReady    = ref(false)
 
-onMounted(async () => {
-  if (Capacitor.isNativePlatform()) {
-    const { value } = await Preferences.get({ key: 'serverUrl' })
-    if (value) {
-      // Navigate WebView to the server — SSO handles auth naturally
-      window.location.href = value
-    } else {
-      showSetup.value = true
-    }
-    return
-  }
-
-  // Web / YunoHost mode
+async function startApp() {
   try { const v = await api.version(); ui.version = v.version ?? '' } catch { /* ignore */ }
   await Promise.all([agenda.load(), tasks.load(), cfg.load()])
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && !Capacitor.isNativePlatform()) {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* ignore */ })
   }
   notif.check(ui.lang)
   tasks.checkAndResetRecurring()
-  setInterval(() => {
-    notif.check(ui.lang)
-    tasks.checkAndResetRecurring()
-  }, 60_000)
+  setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring() }, 60_000)
   appReady.value = true
+}
+
+onMounted(async () => {
+  if (Capacitor.isNativePlatform()) {
+    const { value } = await Preferences.get({ key: 'serverUrl' })
+    if (!value) { showSetup.value = true; return }
+    initNativeApi(value)
+    try {
+      await startApp()
+    } catch (e) {
+      if (e instanceof AuthError) showLogin.value = true
+    }
+    return
+  }
+  // Web / YunoHost
+  await startApp()
 })
 </script>
 
 <template>
-  <!-- Native: server setup screen -->
   <CapacitorSetup v-if="showSetup" />
+  <NativeLogin    v-else-if="showLogin" />
 
-  <!-- Web mode OR native redirecting (dark screen during redirect) -->
   <template v-else-if="appReady || !Capacitor.isNativePlatform()">
 
   <header id="topbar">
@@ -76,7 +78,7 @@ onMounted(async () => {
         <button class="lang-btn" :class="{ active: ui.lang==='es' }" @click="ui.lang='es'">ES</button>
         <button class="lang-btn" :class="{ active: ui.lang==='en' }" @click="ui.lang='en'">EN</button>
       </div>
-      <a class="ynh-home-btn" href="/yunohost/sso" title="YunoHost">🏠</a>
+      <a v-if="!Capacitor.isNativePlatform()" class="ynh-home-btn" href="/yunohost/sso" title="YunoHost">🏠</a>
     </div>
     <div class="topbar-row2">
       <button v-for="(label, key) in T.tabs" :key="key"

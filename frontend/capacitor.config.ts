@@ -16,6 +16,9 @@ const config: CapacitorConfig = {
       launchShowDuration: 0,
       backgroundColor: '#080810',
     },
+    CapacitorHttp: {
+      enabled: true,
+    },
   },
 }
 
