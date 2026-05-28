@@ -12,7 +12,7 @@ import { useTasksStore }  from '@/stores/tasks'
 import { useConfigStore } from '@/stores/config'
 import { useNotifStore }  from '@/stores/notifications'
 import { LANG } from '@/i18n'
-import { api, initNativeApi, AuthError } from '@/api/client'
+import { api, initNativeApi } from '@/api/client'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 
@@ -47,7 +47,8 @@ onMounted(async () => {
     try {
       await startApp()
     } catch (e) {
-      if (e instanceof AuthError) showLogin.value = true
+      // AuthError o cualquier error de red → pantalla de login en vez de negro
+      showLogin.value = true
     }
     return
   }
