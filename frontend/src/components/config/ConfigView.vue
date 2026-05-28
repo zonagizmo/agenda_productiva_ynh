@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useUiStore } from '@/stores/ui'
 import { LANG } from '@/i18n'
 import { callAiDirect } from '@/composables/useAiCall'
+import { Capacitor } from '@capacitor/core'
+import { Preferences } from '@capacitor/preferences'
 
 const cfg = useConfigStore()
 const ui  = useUiStore()
@@ -38,6 +40,19 @@ async function testConnection() {
   } finally {
     testing.value = false
   }
+}
+
+const serverUrl = ref('')
+onMounted(async () => {
+  if (Capacitor.isNativePlatform()) {
+    const { value } = await Preferences.get({ key: 'serverUrl' })
+    serverUrl.value = value ?? ''
+  }
+})
+
+async function changeServer() {
+  await Preferences.remove({ key: 'serverUrl' })
+  window.location.reload()
 }
 
 function toggleDay(d: number) {
@@ -182,6 +197,20 @@ function toggleDay(d: number) {
       <div class="days-grid">
         <button class="day-btn" :class="{ active: ui.lang==='es' }" @click="ui.lang='es'">🇪🇸 Español</button>
         <button class="day-btn" :class="{ active: ui.lang==='en' }" @click="ui.lang='en'">🇬🇧 English</button>
+      </div>
+    </div>
+
+    <!-- Native: server settings -->
+    <div v-if="Capacitor.isNativePlatform()" class="config-block">
+      <div class="config-section-title">📡 {{ ui.lang==='es' ? 'Servidor' : 'Server' }}</div>
+      <div class="config-row" style="align-items:flex-start">
+        <span class="config-row-label">URL</span>
+        <span style="font-size:.8rem;color:var(--muted);word-break:break-all;flex:1">{{ serverUrl }}</span>
+      </div>
+      <div class="config-row">
+        <button class="gen-btn" style="width:auto;padding:.55rem 1.2rem;margin:0" @click="changeServer()">
+          🔄 {{ ui.lang==='es' ? 'Cambiar servidor' : 'Change server' }}
+        </button>
       </div>
     </div>
   </div>
