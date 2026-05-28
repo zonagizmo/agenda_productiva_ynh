@@ -47,6 +47,7 @@ input[type=date], input[type=time] { color-scheme: dark; }
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: .6rem .9rem;
+  padding-top: calc(.6rem + env(safe-area-inset-top));
   flex-shrink: 0;
   position: sticky; top: 0; z-index: 100;
 }
