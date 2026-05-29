@@ -205,6 +205,18 @@ input[type=date], input[type=time] { color-scheme: dark; }
 
 /* ── Sections card ───────────────────────────────────────── */
 .sections-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.2rem; margin-bottom:1rem; }
+.sections-toggle {
+  display:flex; justify-content:space-between; align-items:center;
+  width:100%; background:none; border:none; cursor:pointer;
+  color:var(--text); font-size:.82rem; font-weight:600; letter-spacing:.04em;
+  text-transform:uppercase; padding:.1rem 0 .8rem; margin-bottom:.2rem;
+  border-bottom:1px solid var(--border);
+}
+.sections-toggle-arrow {
+  font-size:1.1rem; color:var(--muted); transition:transform .2s ease;
+  transform: rotate(90deg);
+}
+.sections-toggle-arrow.open { transform: rotate(-90deg); }
 .section-block { margin-bottom:1.1rem; }
 .section-block:last-child { margin-bottom:0; }
 .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; }

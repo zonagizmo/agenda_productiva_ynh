@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import SectionCard from './SectionCard.vue'
 import PlanCard from './PlanCard.vue'
 import { useAgendaStore } from '@/stores/agenda'
@@ -20,10 +20,13 @@ const ui     = useUiStore()
 const notif  = useNotifStore()
 const T      = computed(() => LANG[ui.lang])
 
-const generating   = ref(false)
-const error        = ref('')
-const rolloverMsg  = ref('')
+const generating    = ref(false)
+const error         = ref('')
+const rolloverMsg   = ref('')
+const sectionsOpen  = ref(!agenda.day.plan)
 let   rolloverTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(() => agenda.selDate, () => { sectionsOpen.value = !agenda.day.plan })
 
 const dayLabel = computed(() => {
   const k = agenda.selDate
@@ -57,6 +60,7 @@ async function generate() {
     const text = await callAiDirect(pd.prompt, prov, cfg.currentModel(), cfg.config.iaApiKey, ui.lang)
     if (!text) { error.value = T.value.errNoResponse; return }
     agenda.setPlan(text)
+    sectionsOpen.value = false
   } catch (e) {
     error.value = (e as Error).message || T.value.errConnect
   } finally {
@@ -242,7 +246,13 @@ function doRollover() {
 
         <!-- Sections -->
         <div class="sections-card">
-          <SectionCard v-for="sec in T.sections" :key="sec.key" :section="sec" :dayKey="agenda.selDate" />
+          <button class="sections-toggle" @click="sectionsOpen=!sectionsOpen">
+            <span>{{ ui.lang==='es' ? 'Entradas del día' : 'Day entries' }}</span>
+            <span class="sections-toggle-arrow" :class="{ open: sectionsOpen }">›</span>
+          </button>
+          <template v-if="sectionsOpen">
+            <SectionCard v-for="sec in T.sections" :key="sec.key" :section="sec" :dayKey="agenda.selDate" />
+          </template>
         </div>
 
         <!-- Error -->
@@ -256,7 +266,7 @@ function doRollover() {
 
         <!-- Plan -->
         <PlanCard v-if="agenda.day.plan" :plan="agenda.day.plan"
-          @regen="generate" @delete="agenda.setPlan(null)" />
+          @regen="generate" @delete="agenda.setPlan(null); sectionsOpen=true" />
 
         <!-- Rollover -->
         <button v-if="hasRolloverItems" class="rollover-btn" @click="doRollover">
