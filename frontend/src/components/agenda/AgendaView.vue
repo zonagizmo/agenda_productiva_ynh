@@ -70,10 +70,19 @@ async function generate() {
 
 const recentDays = computed(() => {
   const today = todayKey()
+  const sel   = agenda.selDate
   const future = Object.keys(agenda.data)
     .filter(k => k > today && (agenda.hasPlan(k) || agenda.hasData(k)))
     .sort((a, b) => a.localeCompare(b))
-  return [today, ...future]
+  const list = [today, ...future]
+  if (!list.includes(sel)) {
+    if (sel < today) list.unshift(sel)
+    else {
+      const idx = list.findIndex(k => k > sel)
+      idx === -1 ? list.push(sel) : list.splice(idx, 0, sel)
+    }
+  }
+  return list
 })
 
 type DayPanelEntry =
