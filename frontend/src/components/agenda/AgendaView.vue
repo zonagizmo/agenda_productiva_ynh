@@ -64,11 +64,13 @@ async function generate() {
   }
 }
 
-const recentDays = computed(() =>
-  Object.keys(agenda.data)
-    .filter(k => agenda.hasPlan(k) || agenda.hasData(k))
-    .sort((a,b) => b.localeCompare(a)).slice(0,6)
-)
+const recentDays = computed(() => {
+  const today = todayKey()
+  const future = Object.keys(agenda.data)
+    .filter(k => k > today && (agenda.hasPlan(k) || agenda.hasData(k)))
+    .sort((a, b) => a.localeCompare(b))
+  return [today, ...future]
+})
 
 type DayPanelEntry =
   | { source: 'task';   id: string; texto: string; done: boolean; prioridad: Priority; toggle: () => void }
