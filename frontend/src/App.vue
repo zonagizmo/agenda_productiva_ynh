@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AgendaView    from '@/components/agenda/AgendaView.vue'
 import TareasView    from '@/components/tasks/TareasView.vue'
 import HistorialView from '@/components/historial/HistorialView.vue'
@@ -27,6 +27,9 @@ const showSetup   = ref(false)
 const showLogin   = ref(false)
 const appReady    = ref(false)
 
+let _tickInterval: ReturnType<typeof setInterval> | undefined
+onUnmounted(() => clearInterval(_tickInterval))
+
 async function startApp() {
   try { const v = await api.version(); ui.version = v.version ?? '' } catch { /* ignore */ }
   await Promise.all([agenda.load(), tasks.load(), cfg.load()])
@@ -35,7 +38,7 @@ async function startApp() {
   }
   notif.check(ui.lang)
   tasks.checkAndResetRecurring()
-  setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring() }, 60_000)
+  _tickInterval = setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring() }, 60_000)
   appReady.value = true
 }
 

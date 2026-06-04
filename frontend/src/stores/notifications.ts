@@ -5,8 +5,19 @@ import { useTasksStore } from './tasks'
 import { LANG } from '@/i18n'
 import type { Lang } from '@/types'
 
+function loadFiredSet(): Set<string> {
+  try {
+    const raw = sessionStorage.getItem('notifFired')
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set()
+  } catch { return new Set() }
+}
+
+function persistFiredSet(set: Set<string>) {
+  try { sessionStorage.setItem('notifFired', JSON.stringify([...set])) } catch {}
+}
+
 export const useNotifStore = defineStore('notif', () => {
-  const firedSet = new Set<string>()
+  const firedSet = loadFiredSet()
 
   const perm = computed(() =>
     typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
@@ -35,10 +46,11 @@ export const useNotifStore = defineStore('notif', () => {
             const dt = new Date(`${av.fecha}T${av.hora}:00`)
             if (now.getTime() - dt.getTime() >= 0 && now.getTime() - dt.getTime() < win) {
               firedSet.add(av.id)
-              const dot = T.priors.find(p => p.key === av.prioridad)?.dot ?? '🔔'
-              try { new Notification(`${dot} ${sec.icon} ${sec.label} — ${T.aviso}`, { body: `${av.texto}${item.texto ? '\n📌 ' + item.texto : ''}`, tag: av.id }) } catch {}
+              persistFiredSet(firedSet)
               av.fired = true
               agenda.save()
+              const dot = T.priors.find(p => p.key === av.prioridad)?.dot ?? '🔔'
+              try { new Notification(`${dot} ${sec.icon} ${sec.label} — ${T.aviso}`, { body: `${av.texto}${item.texto ? '\n📌 ' + item.texto : ''}`, tag: av.id }) } catch {}
             }
           }
         }
@@ -52,10 +64,11 @@ export const useNotifStore = defineStore('notif', () => {
         const dt = new Date(`${av.fecha}T${av.hora}:00`)
         if (now.getTime() - dt.getTime() >= 0 && now.getTime() - dt.getTime() < win) {
           firedSet.add(av.id)
-          const dot = T.priors.find(p => p.key === av.prioridad)?.dot ?? '🔔'
-          try { new Notification(`${dot} 📋 ${lang === 'es' ? 'Tarea' : 'Task'} — ${T.aviso}`, { body: `${av.texto}${task.texto ? ' · ' + task.texto : ''}`, tag: av.id }) } catch {}
+          persistFiredSet(firedSet)
           av.fired = true
           tasks.saveTasks()
+          const dot = T.priors.find(p => p.key === av.prioridad)?.dot ?? '🔔'
+          try { new Notification(`${dot} 📋 ${lang === 'es' ? 'Tarea' : 'Task'} — ${T.aviso}`, { body: `${av.texto}${task.texto ? ' · ' + task.texto : ''}`, tag: av.id }) } catch {}
         }
       }
     }
