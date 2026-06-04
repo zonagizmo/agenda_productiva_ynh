@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import SectionCard from './SectionCard.vue'
 import PlanCard from './PlanCard.vue'
 import { useAgendaStore } from '@/stores/agenda'
@@ -25,6 +25,7 @@ const error         = ref('')
 const rolloverMsg   = ref('')
 const sectionsOpen  = ref(!agenda.day.plan)
 let   rolloverTimer: ReturnType<typeof setTimeout> | null = null
+onUnmounted(() => { if (rolloverTimer) clearTimeout(rolloverTimer) })
 
 watch(() => agenda.selDate, () => { sectionsOpen.value = !agenda.day.plan })
 

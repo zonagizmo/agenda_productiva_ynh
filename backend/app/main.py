@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse, Response
@@ -7,12 +8,19 @@ from fastapi.staticfiles import StaticFiles
 from .routers import storage, providers, prompt
 from .version import get_version_info
 
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+    level=logging.INFO,
+)
+logger = logging.getLogger("agenda")
+
 PATH_PREFIX = os.environ.get("APP_PATH", "").rstrip("/")
 # En desarrollo: sources/dist (salida de Vite). En servidor: AGENDA_DIST_DIR apunta a install_dir/dist
 _default_dist = Path(__file__).parent.parent.parent / "sources" / "dist"
 DIST_DIR      = Path(os.environ.get("AGENDA_DIST_DIR", str(_default_dist)))
 
 app = FastAPI(docs_url=None, redoc_url=None)
+logger.info("Agenda Productiva backend starting — dist=%s", DIST_DIR)
 
 # ── API routers ────────────────────────────────────────────
 app.include_router(storage.router)
@@ -73,8 +81,8 @@ if DIST_DIR.exists():
 @app.get("/")
 @app.get("/{path:path}")
 async def spa(request: Request, path: str = ""):
-    # API and manifest routes are already handled above
     index = DIST_DIR / "index.html"
     if index.exists():
         return FileResponse(index)
+    logger.error("Frontend not found at %s — serving 503", DIST_DIR)
     return Response("App not built", status_code=503)

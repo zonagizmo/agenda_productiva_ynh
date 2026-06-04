@@ -14,7 +14,7 @@ function newAviso(): Aviso {
 
 export function addInterval(dateStr: string, rec: Recurrence, sign: 1 | -1): string {
   const d   = new Date(dateStr + 'T12:00:00')
-  const n   = (rec.interval ?? 1) * sign
+  const n   = Math.max(1, rec.interval ?? 1) * sign
   const [, sm, sd] = rec.startDate.split('-')
   const startDay   = parseInt(sd)
 
@@ -167,9 +167,13 @@ export const useTasksStore = defineStore('tasks', () => {
   function checkAndResetRecurring() {
     let changed = false
     for (const t of tasks.value) {
-      if (!t.recurrence || !t.done) continue
+      if (!t.recurrence) continue
       const rec = t.recurrence
+      // Sanitize interval — si quedó en 0 o negativo, corregir a 1
+      if (!rec.interval || rec.interval < 1) { rec.interval = 1; changed = true }
+      if (!t.done) continue
       const base = rec.lastCompleted || rec.startDate
+      if (!base) continue
       const nextCycle = addInterval(base, rec, 1)
       if (todayKey() >= nextCycle) {
         t.done = false

@@ -1,9 +1,13 @@
+import logging
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from typing import Any
 from ..auth import current_user
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger("agenda.prompt")
+
+MAX_CONTENT_CHARS = 6000  # ~1500 tokens de contenido; deja margen para la plantilla del prompt
 
 
 class PromptBody(BaseModel):
@@ -60,6 +64,13 @@ def build_prompt(body: PromptBody, request: Request):
     blocks = "\n\n".join(s for s in secs if s)
     if not blocks.strip():
         return {"error": "no_content"}
+
+    if len(blocks) > MAX_CONTENT_CHARS:
+        logger.warning("prompt content truncated: %d → %d chars", len(blocks), MAX_CONTENT_CHARS)
+        blocks = blocks[:MAX_CONTENT_CHARS] + (
+            "\n\n[... contenido truncado por longitud ...]" if lang != "en"
+            else "\n\n[... content truncated due to length ...]"
+        )
 
     dots = {"alta": "🔴", "media": "🟡", "baja": "🟢"}
 

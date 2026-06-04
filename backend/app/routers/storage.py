@@ -1,9 +1,11 @@
+import logging
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from ..auth import current_user
 from ..database import init_db, get_value, set_value, delete_value
 
-router = APIRouter(prefix="/api/storage")
+router  = APIRouter(prefix="/api/storage")
+logger  = logging.getLogger("agenda.storage")
 
 
 class SetBody(BaseModel):
@@ -22,6 +24,7 @@ def storage_set(key: str, body: SetBody, request: Request):
     user = current_user(request)
     init_db(user)
     set_value(user, key, body.value)
+    logger.debug("storage set [%s] %s (%d bytes)", user, key, len(body.value))
     return {"ok": True}
 
 
