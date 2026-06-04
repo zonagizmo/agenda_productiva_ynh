@@ -4,6 +4,7 @@ import { useConfigStore } from '@/stores/config'
 import { useUiStore } from '@/stores/ui'
 import { LANG } from '@/i18n'
 import { callAiDirect } from '@/composables/useAiCall'
+import { api } from '@/api/client'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 
@@ -17,6 +18,12 @@ const showKey       = ref(false)
 const saveStatus    = ref<'' | 'saving' | 'saved' | 'error'>('')
 const scheduleError = ref('')
 let _saveTimer: ReturnType<typeof setTimeout> | undefined
+
+const exporting     = ref(false)
+const importStatus  = ref('')
+const importInput   = ref<HTMLInputElement | null>(null)
+
+const EXPORT_KEYS = ['agenda-v3', 'tasks-v1', 'labels-v1', 'config-v1', 'rollover-log'] as const
 
 const summary = computed(() => {
   const c  = cfg.config
@@ -99,6 +106,55 @@ function toggleDay(d: number) {
   if (i === -1) ds.push(d)
   else ds.splice(i, 1)
   doSave()
+}
+
+async function exportData() {
+  exporting.value = true
+  try {
+    const result: Record<string, unknown> = {
+      _export_version: 1,
+      _export_date: new Date().toISOString(),
+    }
+    for (const key of EXPORT_KEYS) {
+      const { value } = await api.storage.get(key)
+      if (value) {
+        try { result[key] = JSON.parse(value) } catch { result[key] = value }
+      }
+    }
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `agenda-backup-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } finally {
+    exporting.value = false
+  }
+}
+
+function triggerImport() { importInput.value?.click() }
+
+async function onImportFile(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  importStatus.value = T.value.importingMsg
+  try {
+    const text   = await file.text()
+    const parsed = JSON.parse(text) as Record<string, unknown>
+    for (const key of EXPORT_KEYS) {
+      if (parsed[key] !== undefined && parsed[key] !== null) {
+        await api.storage.set(key, parsed[key])
+      }
+    }
+    importStatus.value = T.value.importedMsg
+    setTimeout(() => window.location.reload(), 1200)
+  } catch (e) {
+    importStatus.value = `❌ ${(e as Error).message}`
+  }
+  if (importInput.value) importInput.value.value = ''
 }
 </script>
 
@@ -257,6 +313,34 @@ function toggleDay(d: number) {
         <button class="gen-btn" style="width:auto;padding:.55rem 1.2rem;margin:0" @click="changeServer()">
           🔄 {{ ui.lang==='es' ? 'Cambiar servidor' : 'Change server' }}
         </button>
+      </div>
+    </div>
+
+    <!-- Export / Import -->
+    <div class="config-block">
+      <div class="config-section-title">{{ T.exportSection }}</div>
+
+      <div class="config-row" style="gap:.8rem;flex-wrap:wrap">
+        <button class="gen-btn" style="width:auto;padding:.55rem 1.2rem;margin:0"
+          :disabled="exporting" @click="exportData()">
+          {{ exporting ? T.exporting : T.exportBtn }}
+        </button>
+      </div>
+
+      <div style="margin-top:.8rem">
+        <p style="font-size:.73rem;color:var(--muted);margin-bottom:.5rem">{{ T.importWarning }}</p>
+        <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+          <button class="gen-btn" style="width:auto;padding:.55rem 1.2rem;margin:0;background:rgba(255,107,107,.15)"
+            @click="triggerImport()">
+            {{ T.importBtn }}
+          </button>
+          <input ref="importInput" type="file" accept=".json,application/json" style="display:none"
+            @change="onImportFile" />
+          <span v-if="importStatus"
+            :style="`font-size:.82rem;color:${importStatus.startsWith('✅') ? '#6bcb77' : importStatus.startsWith('Importand') || importStatus.startsWith('Import') ? 'var(--muted)' : '#ff6b6b'}`">
+            {{ importStatus }}
+          </span>
+        </div>
       </div>
     </div>
   </div>

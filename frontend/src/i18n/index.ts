@@ -34,6 +34,9 @@ interface Translations {
   freeNote: string
   rolloverBtn: string; rolloverDone: string
   rolloverLogTitle: string; rolloverLogEmpty: string
+  // Export / Import
+  exportSection: string; exportBtn: string; exporting: string
+  importBtn: string; importWarning: string; importingMsg: string; importedMsg: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -81,6 +84,9 @@ export const LANG: Record<Lang, Translations> = {
     providerLabel: 'Proveedor', modelLabel: 'Modelo', testBtn: 'Probar conexión', testing: 'Probando...', freeNote: '✓ = Gratis con cuenta',
     rolloverBtn: '⏩ Pasar pendientes al día siguiente', rolloverDone: 'aplazado(s) al',
     rolloverLogTitle: '↩️ Aplazamientos recientes', rolloverLogEmpty: 'Sin aplazamientos registrados.',
+    exportSection: '💾 Exportar / Importar datos', exportBtn: '⬇️ Exportar JSON', exporting: 'Exportando...',
+    importBtn: '⬆️ Importar JSON', importWarning: 'Importar sobrescribirá todos los datos existentes.',
+    importingMsg: 'Importando...', importedMsg: '✅ Importado. Recargando...',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -113,5 +119,8 @@ export const LANG: Record<Lang, Translations> = {
     providerLabel: 'Provider', modelLabel: 'Model', testBtn: 'Test connection', testing: 'Testing...', freeNote: '✓ = Free with account',
     rolloverBtn: '⏩ Roll pending to next workday', rolloverDone: 'moved to',
     rolloverLogTitle: '↩️ Recent rollovers', rolloverLogEmpty: 'No rollovers recorded.',
+    exportSection: '💾 Export / Import data', exportBtn: '⬇️ Export JSON', exporting: 'Exporting...',
+    importBtn: '⬆️ Import JSON', importWarning: 'Import will overwrite all existing data.',
+    importingMsg: 'Importing...', importedMsg: '✅ Imported. Reloading...',
   },
 }
