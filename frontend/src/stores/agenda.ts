@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/api/client'
 import { uid, todayKey } from '@/composables/useDate'
-import type { DayData, AgendaItem, Aviso } from '@/types'
+import type { DayData, AgendaItem, Aviso, RolloverEntry } from '@/types'
 
 function newAviso(): Aviso {
   return { id: uid(), texto: '', fecha: todayKey(), hora: '09:00', prioridad: 'media', fired: false }
@@ -32,9 +32,10 @@ function migrateDay(raw: Partial<DayData> | null): DayData {
 }
 
 export const useAgendaStore = defineStore('agenda', () => {
-  const data    = ref<Record<string, DayData>>({})
-  const selDate = ref(todayKey())
-  const calCursor = ref({ y: new Date().getFullYear(), m: new Date().getMonth() })
+  const data       = ref<Record<string, DayData>>({})
+  const selDate    = ref(todayKey())
+  const calCursor  = ref({ y: new Date().getFullYear(), m: new Date().getMonth() })
+  const rolloverLog = ref<RolloverEntry[]>([])
 
   const day = computed(() => data.value[selDate.value] ?? emptyDay())
 
@@ -58,14 +59,24 @@ export const useAgendaStore = defineStore('agenda', () => {
   }
 
   async function load() {
-    const res = await api.storage.get('agenda-v3')
+    const [res, rl] = await Promise.all([
+      api.storage.get('agenda-v3'),
+      api.storage.get('rollover-log'),
+    ])
     if (res.value) {
       const raw = JSON.parse(res.value) as Record<string, Partial<DayData>>
       for (const [k, v] of Object.entries(raw)) data.value[k] = migrateDay(v)
     }
+    if (rl.value) rolloverLog.value = JSON.parse(rl.value) as RolloverEntry[]
   }
 
   async function save() { await api.storage.set('agenda-v3', data.value) }
+
+  async function addRolloverEntry(entry: Omit<RolloverEntry, 'id'>) {
+    rolloverLog.value.unshift({ id: uid(), ...entry })
+    if (rolloverLog.value.length > 50) rolloverLog.value = rolloverLog.value.slice(0, 50)
+    await api.storage.set('rollover-log', rolloverLog.value)
+  }
 
   function addItem(section: keyof Pick<DayData,'objetivos'|'tareas'|'reuniones'|'plazos'>) {
     ensureDay()[section].push(newItem())
@@ -105,29 +116,31 @@ export const useAgendaStore = defineStore('agenda', () => {
     return ['objetivos','tareas','reuniones','plazos'].some(s => (d[s as keyof DayData] as AgendaItem[]).some(x => x.texto))
   }
 
-  function rolloverToNextWorkday(fromDate: string, workDays: number[]): { count: number; targetDate: string } {
+  function rolloverToNextWorkday(fromDate: string, workDays: number[]): { count: number; targetDate: string; items: string[] } {
     const days = workDays.length ? workDays : [1, 2, 3, 4, 5]
     const d = new Date(fromDate + 'T12:00:00')
     do { d.setDate(d.getDate() + 1) } while (!days.includes(d.getDay()))
     const targetDate = d.toISOString().slice(0, 10)
 
     const src = data.value[fromDate]
-    if (!src) return { count: 0, targetDate }
+    if (!src) return { count: 0, targetDate, items: [] }
 
     if (!data.value[targetDate]) data.value[targetDate] = emptyDay()
 
+    const items: string[] = []
     let count = 0
     for (const k of ['objetivos', 'tareas', 'reuniones', 'plazos'] as const) {
       for (const item of src[k]) {
         if (!item.texto.trim() || item.done || item.deferred) continue
         item.deferred = true
         data.value[targetDate][k].push(newItem(item.texto))
+        items.push(item.texto)
         count++
       }
     }
     if (count) save()
-    return { count, targetDate }
+    return { count, targetDate, items }
   }
 
-  return { data, selDate, calCursor, day, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday }
+  return { data, selDate, calCursor, day, rolloverLog, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday, addRolloverEntry }
 })

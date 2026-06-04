@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useAgendaStore } from '@/stores/agenda'
 import { useUiStore } from '@/stores/ui'
 import { LANG } from '@/i18n'
-import { fmtLong, isToday } from '@/composables/useDate'
+import { fmtLong, fmtShort, isToday } from '@/composables/useDate'
 
 const agenda = useAgendaStore()
 const ui     = useUiStore()
@@ -68,6 +68,24 @@ function deleteDay(k: string) { delete agenda.data[k]; agenda.save() }
       <div class="hist-actions">
         <button class="hist-open" @click="openDay(k)">{{ T.histOpen }}</button>
         <button class="hist-del" @click="deleteDay(k)">🗑️</button>
+      </div>
+    </div>
+
+    <!-- Rollover log -->
+    <div v-if="agenda.rolloverLog.length" style="margin-top:1.8rem">
+      <h3 class="rollover-log-title">{{ T.rolloverLogTitle }}</h3>
+      <div v-for="entry in agenda.rolloverLog" :key="entry.id" class="rollover-log-card">
+        <div class="rollover-log-header">
+          <span>↩ {{ fmtShort(entry.fromDate, ui.lang) }} → {{ fmtShort(entry.targetDate, ui.lang) }}</span>
+          <span class="rollover-log-count">{{ entry.count }} ítem{{ entry.count !== 1 ? 's' : '' }}</span>
+        </div>
+        <div class="rollover-log-items">
+          <span v-for="(item, i) in entry.items.slice(0, 3)" :key="i" class="rollover-log-item">{{ item }}</span>
+          <span v-if="entry.items.length > 3" class="rollover-log-more">+{{ entry.items.length - 3 }}</span>
+        </div>
+        <div class="rollover-log-time">
+          {{ new Date(entry.movedAt).toLocaleDateString(ui.lang==='es'?'es-ES':'en-US', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) }}
+        </div>
       </div>
     </div>
   </div>

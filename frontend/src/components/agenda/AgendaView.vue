@@ -121,8 +121,9 @@ const hasRolloverItems = computed(() => {
 
 function doRollover() {
   const workDays: number[] = cfg.config.diasLaborables?.length ? cfg.config.diasLaborables : [1,2,3,4,5]
-  const { count, targetDate } = agenda.rolloverToNextWorkday(agenda.selDate, workDays)
+  const { count, targetDate, items } = agenda.rolloverToNextWorkday(agenda.selDate, workDays)
   if (!count) return
+  agenda.addRolloverEntry({ fromDate: agenda.selDate, targetDate, count, items, movedAt: new Date().toISOString() })
   const dateStr = fmtShort(targetDate, ui.lang)
   rolloverMsg.value = ui.lang === 'es'
     ? `↪ ${count} ítem${count > 1 ? 's' : ''} ${T.value.rolloverDone} ${dateStr}`

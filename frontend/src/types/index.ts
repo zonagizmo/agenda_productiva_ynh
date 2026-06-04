@@ -84,6 +84,15 @@ export interface Provider {
 
 export type Providers = Record<string, Provider>
 
+export interface RolloverEntry {
+  id: string
+  fromDate: string
+  targetDate: string
+  count: number
+  items: string[]
+  movedAt: string
+}
+
 export interface SectionDef {
   key: keyof Pick<DayData, 'objetivos' | 'tareas' | 'reuniones' | 'plazos'>
   label: string

@@ -11,9 +11,12 @@ const cfg = useConfigStore()
 const ui  = useUiStore()
 const T   = computed(() => LANG[ui.lang])
 
-const testing    = ref(false)
-const testResult = ref('')
-const showKey    = ref(false)
+const testing       = ref(false)
+const testResult    = ref('')
+const showKey       = ref(false)
+const saveStatus    = ref<'' | 'saving' | 'saved' | 'error'>('')
+const scheduleError = ref('')
+let _saveTimer: ReturnType<typeof setTimeout> | undefined
 
 const summary = computed(() => {
   const c  = cfg.config
@@ -23,6 +26,37 @@ const summary = computed(() => {
   if (c.pausaComida) s += `, ${t.summaryPausa} ${c.pausaInicio}–${c.pausaFin}`
   return `${t.summaryLabel}${s}. ${t.summaryDias} ${ds}.`
 })
+
+async function doSave() {
+  clearTimeout(_saveTimer)
+  saveStatus.value = 'saving'
+  try {
+    await cfg.save()
+    saveStatus.value = 'saved'
+    _saveTimer = setTimeout(() => { saveStatus.value = '' }, 2000)
+  } catch {
+    saveStatus.value = 'error'
+    _saveTimer = setTimeout(() => { saveStatus.value = '' }, 3000)
+  }
+}
+
+function saveSchedule() {
+  const c = cfg.config
+  if (c.jornadaFin <= c.jornadaInicio) {
+    scheduleError.value = ui.lang === 'es'
+      ? 'La hora de fin debe ser posterior al inicio de jornada'
+      : 'End time must be after start time'
+    return
+  }
+  if (c.pausaComida && c.pausaFin <= c.pausaInicio) {
+    scheduleError.value = ui.lang === 'es'
+      ? 'El fin de la pausa debe ser posterior al inicio'
+      : 'Break end must be after break start'
+    return
+  }
+  scheduleError.value = ''
+  doSave()
+}
 
 async function testConnection() {
   const prov = cfg.currentProvider()
@@ -43,6 +77,10 @@ async function testConnection() {
 }
 
 const serverUrl = ref('')
+const currentServerUrl = computed(() =>
+  Capacitor.isNativePlatform() ? serverUrl.value : (typeof window !== 'undefined' ? window.location.origin : '')
+)
+
 onMounted(async () => {
   if (Capacitor.isNativePlatform()) {
     const { value } = await Preferences.get({ key: 'serverUrl' })
@@ -60,13 +98,18 @@ function toggleDay(d: number) {
   const i  = ds.indexOf(d)
   if (i === -1) ds.push(d)
   else ds.splice(i, 1)
-  cfg.save()
+  doSave()
 }
 </script>
 
 <template>
   <div style="max-width:620px;margin:0 auto;padding:1.3rem 1.2rem">
-    <h2 class="config-title">{{ T.configTitle }}</h2>
+    <h2 class="config-title">
+      {{ T.configTitle }}
+      <span v-if="saveStatus" class="save-badge" :class="saveStatus">
+        {{ saveStatus === 'saving' ? '…' : saveStatus === 'saved' ? '✓ ' + (ui.lang==='es'?'Guardado':'Saved') : '✗ Error' }}
+      </span>
+    </h2>
     <p class="config-sub">{{ T.configSub }}</p>
 
     <!-- Work schedule -->
@@ -74,11 +117,11 @@ function toggleDay(d: number) {
       <div class="config-section-title">{{ T.jornadaSection }}</div>
       <div class="config-row">
         <span class="config-row-label">{{ T.jornadaStart }}</span>
-        <input type="time" class="config-time" v-model="cfg.config.jornadaInicio" @change="cfg.save()" />
+        <input type="time" class="config-time" v-model="cfg.config.jornadaInicio" @change="saveSchedule()" />
       </div>
       <div class="config-row">
         <span class="config-row-label">{{ T.jornadaEnd }}</span>
-        <input type="time" class="config-time" v-model="cfg.config.jornadaFin" @change="cfg.save()" />
+        <input type="time" class="config-time" v-model="cfg.config.jornadaFin" @change="saveSchedule()" />
       </div>
     </div>
 
@@ -89,22 +132,25 @@ function toggleDay(d: number) {
         <span class="config-row-label">{{ T.pausaToggle }}</span>
         <div style="display:flex;gap:.4rem">
           <button class="toggle-btn" :class="cfg.config.pausaComida?'on':'off'"
-            @click="cfg.config.pausaComida=true; cfg.save()">{{ T.yes }}</button>
+            @click="cfg.config.pausaComida=true; doSave()">{{ T.yes }}</button>
           <button class="toggle-btn" :class="!cfg.config.pausaComida?'on':'off'"
-            @click="cfg.config.pausaComida=false; cfg.save()">{{ T.no }}</button>
+            @click="cfg.config.pausaComida=false; doSave()">{{ T.no }}</button>
         </div>
       </div>
       <template v-if="cfg.config.pausaComida">
         <div class="config-row">
           <span class="config-row-label">{{ T.pausaStart }}</span>
-          <input type="time" class="config-time" v-model="cfg.config.pausaInicio" @change="cfg.save()" />
+          <input type="time" class="config-time" v-model="cfg.config.pausaInicio" @change="saveSchedule()" />
         </div>
         <div class="config-row">
           <span class="config-row-label">{{ T.pausaEnd }}</span>
-          <input type="time" class="config-time" v-model="cfg.config.pausaFin" @change="cfg.save()" />
+          <input type="time" class="config-time" v-model="cfg.config.pausaFin" @change="saveSchedule()" />
         </div>
       </template>
     </div>
+
+    <!-- Schedule error -->
+    <div v-if="scheduleError" class="config-error">⚠️ {{ scheduleError }}</div>
 
     <!-- Work days -->
     <div class="config-block">
@@ -118,9 +164,9 @@ function toggleDay(d: number) {
         <span class="config-row-label">{{ T.weekStartLabel }}</span>
         <div style="display:flex;gap:.4rem">
           <button class="toggle-btn" :class="cfg.config.weekStart===0?'on':'off'"
-            @click="cfg.config.weekStart=0; cfg.save()">{{ T.weekStartSun }}</button>
+            @click="cfg.config.weekStart=0; doSave()">{{ T.weekStartSun }}</button>
           <button class="toggle-btn" :class="cfg.config.weekStart===1?'on':'off'"
-            @click="cfg.config.weekStart=1; cfg.save()">{{ T.weekStartMon }}</button>
+            @click="cfg.config.weekStart=1; doSave()">{{ T.weekStartMon }}</button>
         </div>
       </div>
     </div>
@@ -129,7 +175,7 @@ function toggleDay(d: number) {
     <div class="config-block">
       <div class="config-section-title">{{ T.notasSection }}</div>
       <textarea class="config-textarea" rows="3" v-model="cfg.config.notas"
-        :placeholder="T.notasPlaceholder" @input="cfg.save()"></textarea>
+        :placeholder="T.notasPlaceholder" @input="doSave()"></textarea>
       <p class="config-hint">{{ T.notasHint }}</p>
     </div>
 
@@ -145,7 +191,7 @@ function toggleDay(d: number) {
         <div class="prov-grid">
           <button v-for="(prov, key) in cfg.providers" :key="key"
             class="prov-btn" :class="{ active: cfg.config.iaProvider===key }"
-            @click="cfg.config.iaProvider=key; cfg.config.iaModel=''; cfg.save()">
+            @click="cfg.config.iaProvider=key; cfg.config.iaModel=cfg.providers[key]?.default_model ?? ''; doSave()">
             {{ prov.name }}
             <span v-if="prov.free" class="prov-free">FREE</span>
           </button>
@@ -154,7 +200,7 @@ function toggleDay(d: number) {
 
       <div v-if="cfg.currentProvider()" class="config-row">
         <span class="config-row-label">{{ T.modelLabel }}</span>
-        <select class="config-time" v-model="cfg.config.iaModel" @change="cfg.save()">
+        <select class="config-time" v-model="cfg.config.iaModel" @change="doSave()">
           <option v-for="m in cfg.currentProvider()!.models" :key="m" :value="m">{{ m }}</option>
         </select>
       </div>
@@ -167,7 +213,7 @@ function toggleDay(d: number) {
             class="config-time" style="width:100%;padding-right:2.2rem"
             v-model="cfg.config.iaApiKey"
             :placeholder="cfg.currentProvider()?.key_hint ?? ''"
-            @input="cfg.save()"
+            @input="doSave()"
           />
           <button class="show-key-btn" @click="showKey=!showKey">{{ showKey ? '🙈' : '👁️' }}</button>
         </div>
@@ -200,14 +246,14 @@ function toggleDay(d: number) {
       </div>
     </div>
 
-    <!-- Native: server settings -->
-    <div v-if="Capacitor.isNativePlatform()" class="config-block">
+    <!-- Server (all platforms) -->
+    <div class="config-block">
       <div class="config-section-title">📡 {{ ui.lang==='es' ? 'Servidor' : 'Server' }}</div>
       <div class="config-row" style="align-items:flex-start">
         <span class="config-row-label">URL</span>
-        <span style="font-size:.8rem;color:var(--muted);word-break:break-all;flex:1">{{ serverUrl }}</span>
+        <span style="font-size:.8rem;color:var(--muted);word-break:break-all;flex:1">{{ currentServerUrl }}</span>
       </div>
-      <div class="config-row">
+      <div v-if="Capacitor.isNativePlatform()" class="config-row">
         <button class="gen-btn" style="width:auto;padding:.55rem 1.2rem;margin:0" @click="changeServer()">
           🔄 {{ ui.lang==='es' ? 'Cambiar servidor' : 'Change server' }}
         </button>
