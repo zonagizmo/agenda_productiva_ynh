@@ -32,7 +32,8 @@ const backupMsg     = ref('')
 // CalDAV
 const caldavCfg = ref({
   server_url: '', nc_username: '', nc_password: '',
-  calendar_name: 'personal', sync_reuniones: true, sync_plazos: true,
+  calendar_name: 'personal',
+  sync_objetivos: true, sync_tareas: true, sync_reuniones: true, sync_plazos: true,
 })
 const caldavLastSync    = ref<string | null>(null)
 const caldavTesting     = ref(false)
@@ -120,8 +121,10 @@ onMounted(async () => {
     if (cdCfg.nc_username)   caldavCfg.value.nc_username   = cdCfg.nc_username   as string
     if (cdCfg.nc_password)   caldavCfg.value.nc_password   = cdCfg.nc_password   as string
     if (cdCfg.calendar_name) caldavCfg.value.calendar_name = cdCfg.calendar_name as string
-    if (cdCfg.sync_reuniones !== undefined) caldavCfg.value.sync_reuniones = cdCfg.sync_reuniones as boolean
-    if (cdCfg.sync_plazos    !== undefined) caldavCfg.value.sync_plazos    = cdCfg.sync_plazos    as boolean
+    if (cdCfg.sync_objetivos  !== undefined) caldavCfg.value.sync_objetivos  = cdCfg.sync_objetivos  as boolean
+    if (cdCfg.sync_tareas     !== undefined) caldavCfg.value.sync_tareas     = cdCfg.sync_tareas     as boolean
+    if (cdCfg.sync_reuniones  !== undefined) caldavCfg.value.sync_reuniones  = cdCfg.sync_reuniones  as boolean
+    if (cdCfg.sync_plazos     !== undefined) caldavCfg.value.sync_plazos     = cdCfg.sync_plazos     as boolean
     caldavLastSync.value = (cdCfg.last_sync as string) ?? null
   } catch { /* non-critical */ }
 })
@@ -521,6 +524,14 @@ async function onImportFile(event: Event) {
       </p>
 
       <div class="config-row" style="margin-top:.6rem;flex-wrap:wrap;gap:.5rem">
+        <label class="caldav-toggle">
+          <input type="checkbox" v-model="caldavCfg.sync_objetivos" @change="saveCaldavConfig()" />
+          {{ T.caldavSyncGoals }}
+        </label>
+        <label class="caldav-toggle">
+          <input type="checkbox" v-model="caldavCfg.sync_tareas" @change="saveCaldavConfig()" />
+          {{ T.caldavSyncTasks }}
+        </label>
         <label class="caldav-toggle">
           <input type="checkbox" v-model="caldavCfg.sync_reuniones" @change="saveCaldavConfig()" />
           {{ T.caldavSyncMeetings }}

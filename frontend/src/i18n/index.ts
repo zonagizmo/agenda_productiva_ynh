@@ -50,6 +50,7 @@ interface Translations {
   // CalDAV / Nextcloud
   caldavSection: string; caldavServer: string; caldavUser: string
   caldavPass: string; caldavCalendar: string; caldavHint: string
+  caldavSyncGoals: string; caldavSyncTasks: string
   caldavSyncMeetings: string; caldavSyncDeadlines: string
   caldavTest: string; caldavTesting: string; caldavSync: string; caldavSyncing: string
   caldavDiscover: string; caldavDiscovering: string; caldavPickCal: string
@@ -118,6 +119,7 @@ export const LANG: Record<Lang, Translations> = {
     caldavSection: '📅 Nextcloud Calendar', caldavServer: 'URL Nextcloud', caldavUser: 'Usuario NC',
     caldavPass: 'Contraseña / App password', caldavCalendar: 'Nombre del calendario',
     caldavHint: 'Usa una contraseña de aplicación de Nextcloud (Ajustes → Seguridad).',
+    caldavSyncGoals: 'Sincronizar objetivos', caldavSyncTasks: 'Sincronizar tareas',
     caldavSyncMeetings: 'Sincronizar reuniones', caldavSyncDeadlines: 'Sincronizar plazos',
     caldavTest: 'Probar conexión', caldavTesting: 'Probando...', caldavSync: 'Sincronizar ahora', caldavSyncing: 'Sincronizando...',
     caldavDiscover: '🔍 Descubrir calendarios', caldavDiscovering: 'Buscando...', caldavPickCal: 'Selecciona un calendario:',
@@ -172,6 +174,7 @@ export const LANG: Record<Lang, Translations> = {
     caldavSection: '📅 Nextcloud Calendar', caldavServer: 'Nextcloud URL', caldavUser: 'NC Username',
     caldavPass: 'Password / App password', caldavCalendar: 'Calendar name',
     caldavHint: 'Use a Nextcloud app password (Settings → Security).',
+    caldavSyncGoals: 'Sync goals', caldavSyncTasks: 'Sync tasks',
     caldavSyncMeetings: 'Sync meetings', caldavSyncDeadlines: 'Sync deadlines',
     caldavTest: 'Test connection', caldavTesting: 'Testing...', caldavSync: 'Sync now', caldavSyncing: 'Syncing...',
     caldavDiscover: '🔍 Discover calendars', caldavDiscovering: 'Searching...', caldavPickCal: 'Select a calendar:',

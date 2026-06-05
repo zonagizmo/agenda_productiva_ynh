@@ -20,6 +20,8 @@ class CaldavConfig(BaseModel):
     nc_username:     str  = ""
     nc_password:     str  = ""
     calendar_name:   str  = "personal"
+    sync_objetivos:  bool = True
+    sync_tareas:     bool = True
     sync_reuniones:  bool = True
     sync_plazos:     bool = True
 
@@ -207,6 +209,10 @@ def sync_calendar(request: Request):
             continue  # sólo hoy y futuro
 
         sections: list[tuple[str, list]] = []
+        if cfg.get("sync_objetivos", True):
+            sections.append(("objetivos", day_data.get("objetivos", [])))
+        if cfg.get("sync_tareas", True):
+            sections.append(("tareas", day_data.get("tareas", [])))
         if cfg.get("sync_reuniones", True):
             sections.append(("reuniones", day_data.get("reuniones", [])))
         if cfg.get("sync_plazos", True):
