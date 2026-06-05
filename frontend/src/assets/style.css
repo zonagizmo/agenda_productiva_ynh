@@ -578,3 +578,10 @@ input[type=date], input[type=time] { color-scheme: dark; }
   .stats-kpi-value { font-size:1.4rem; }
   .stats-kpi-card  { padding:.7rem .4rem; }
 }
+
+/* ── CalDAV ──────────────────────────────────────────────── */
+.caldav-toggle {
+  display:flex; align-items:center; gap:.4rem; font-size:.8rem;
+  color:var(--text); cursor:pointer; user-select:none;
+}
+.caldav-toggle input[type=checkbox] { accent-color:var(--accent); width:15px; height:15px; cursor:pointer; }

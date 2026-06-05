@@ -45,4 +45,10 @@ export const api = {
     status: ()  => request<{ last_backup: string | null; file_count: number }>('/backup/status'),
     run:    ()  => request<{ timestamp: string; users: string[]; errors: string[] }>('/backup/run', { method: 'POST' }),
   },
+  caldav: {
+    getConfig:  ()              => request<Record<string, unknown>>('/caldav/config'),
+    saveConfig: (body: unknown) => request<{ ok: boolean }>('/caldav/config', { method: 'POST', body: JSON.stringify(body) }),
+    test:       ()              => request<{ ok: boolean; status?: number }>('/caldav/test', { method: 'POST' }),
+    sync:       ()              => request<{ synced: number; deleted: number; errors: string[]; last_sync: string }>('/caldav/sync', { method: 'POST' }),
+  },
 }

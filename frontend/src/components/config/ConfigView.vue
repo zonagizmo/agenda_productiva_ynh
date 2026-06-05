@@ -29,6 +29,18 @@ const backupStatus  = ref<{ last_backup: string | null; file_count: number } | n
 const backingUp     = ref(false)
 const backupMsg     = ref('')
 
+// CalDAV
+const caldavCfg = ref({
+  server_url: '', nc_username: '', nc_password: '',
+  calendar_name: 'personal', sync_reuniones: true, sync_plazos: true,
+})
+const caldavLastSync  = ref<string | null>(null)
+const caldavTesting   = ref(false)
+const caldavSyncing   = ref(false)
+const caldavTestMsg   = ref('')
+const caldavSyncMsg   = ref('')
+const showCaldavPass  = ref(false)
+
 const summary = computed(() => {
   const c  = cfg.config
   const t  = T.value
@@ -100,6 +112,16 @@ onMounted(async () => {
   try {
     backupStatus.value = await api.backup.status()
   } catch { /* non-critical */ }
+  try {
+    const cdCfg = await api.caldav.getConfig()
+    if (cdCfg.server_url)    caldavCfg.value.server_url    = cdCfg.server_url    as string
+    if (cdCfg.nc_username)   caldavCfg.value.nc_username   = cdCfg.nc_username   as string
+    if (cdCfg.nc_password)   caldavCfg.value.nc_password   = cdCfg.nc_password   as string
+    if (cdCfg.calendar_name) caldavCfg.value.calendar_name = cdCfg.calendar_name as string
+    if (cdCfg.sync_reuniones !== undefined) caldavCfg.value.sync_reuniones = cdCfg.sync_reuniones as boolean
+    if (cdCfg.sync_plazos    !== undefined) caldavCfg.value.sync_plazos    = cdCfg.sync_plazos    as boolean
+    caldavLastSync.value = (cdCfg.last_sync as string) ?? null
+  } catch { /* non-critical */ }
 })
 
 async function changeServer() {
@@ -165,6 +187,44 @@ async function runBackup() {
     backupMsg.value = `❌ ${(e as Error).message}`
   } finally {
     backingUp.value = false
+  }
+}
+
+async function saveCaldavConfig() {
+  await api.caldav.saveConfig(caldavCfg.value)
+}
+
+async function testCaldav() {
+  const c = caldavCfg.value
+  if (!c.server_url || !c.nc_username || !c.nc_password) {
+    caldavTestMsg.value = `❌ ${T.value.caldavErrIncomplete}`; return
+  }
+  caldavTesting.value = true; caldavTestMsg.value = ''
+  await saveCaldavConfig()
+  try {
+    const r = await api.caldav.test()
+    caldavTestMsg.value = r.ok ? T.value.caldavOk : `❌ HTTP ${r.status}`
+  } catch (e) {
+    caldavTestMsg.value = `❌ ${(e as Error).message}`
+  } finally {
+    caldavTesting.value = false
+    setTimeout(() => { caldavTestMsg.value = '' }, 4000)
+  }
+}
+
+async function syncCaldav() {
+  caldavSyncing.value = true; caldavSyncMsg.value = ''
+  await saveCaldavConfig()
+  try {
+    const r = await api.caldav.sync()
+    caldavLastSync.value = r.last_sync
+    const errs = r.errors.length ? ` (${r.errors.length} err)` : ''
+    caldavSyncMsg.value = `✅ +${r.synced} −${r.deleted}${errs}`
+  } catch (e) {
+    caldavSyncMsg.value = `❌ ${(e as Error).message}`
+  } finally {
+    caldavSyncing.value = false
+    setTimeout(() => { caldavSyncMsg.value = '' }, 5000)
   }
 }
 
@@ -372,6 +432,80 @@ async function onImportFile(event: Event) {
             {{ importStatus }}
           </span>
         </div>
+      </div>
+    </div>
+
+    <!-- Nextcloud CalDAV -->
+    <div class="config-block">
+      <div class="config-section-title">{{ T.caldavSection }}</div>
+
+      <div class="config-row">
+        <span class="config-row-label">{{ T.caldavServer }}</span>
+        <input type="url" class="config-time" style="flex:1" v-model="caldavCfg.server_url"
+          placeholder="https://cloud.ejemplo.com" @change="saveCaldavConfig()" />
+      </div>
+      <div class="config-row">
+        <span class="config-row-label">{{ T.caldavUser }}</span>
+        <input type="text" class="config-time" style="flex:1" v-model="caldavCfg.nc_username"
+          autocomplete="username" @change="saveCaldavConfig()" />
+      </div>
+      <div class="config-row" style="align-items:flex-start">
+        <span class="config-row-label" style="padding-top:.3rem">{{ T.caldavPass }}</span>
+        <div style="flex:1;position:relative">
+          <input :type="showCaldavPass ? 'text' : 'password'" class="config-time"
+            style="width:100%;padding-right:2.2rem"
+            v-model="caldavCfg.nc_password"
+            autocomplete="current-password" @change="saveCaldavConfig()" />
+          <button class="show-key-btn" @click="showCaldavPass=!showCaldavPass">
+            {{ showCaldavPass ? '🙈' : '👁️' }}
+          </button>
+        </div>
+      </div>
+      <div class="config-row">
+        <span class="config-row-label">{{ T.caldavCalendar }}</span>
+        <input type="text" class="config-time" style="flex:1" v-model="caldavCfg.calendar_name"
+          placeholder="personal" @change="saveCaldavConfig()" />
+      </div>
+
+      <p style="font-size:.72rem;color:var(--muted);padding:.3rem 0 .6rem;border-bottom:1px solid var(--border)">
+        💡 {{ T.caldavHint }}
+      </p>
+
+      <div class="config-row" style="margin-top:.6rem;flex-wrap:wrap;gap:.5rem">
+        <label class="caldav-toggle">
+          <input type="checkbox" v-model="caldavCfg.sync_reuniones" @change="saveCaldavConfig()" />
+          {{ T.caldavSyncMeetings }}
+        </label>
+        <label class="caldav-toggle">
+          <input type="checkbox" v-model="caldavCfg.sync_plazos" @change="saveCaldavConfig()" />
+          {{ T.caldavSyncDeadlines }}
+        </label>
+      </div>
+
+      <div class="config-row" style="gap:.8rem;flex-wrap:wrap;margin-top:.4rem">
+        <button class="gen-btn" style="width:auto;padding:.5rem 1rem;margin:0"
+          :disabled="caldavTesting" @click="testCaldav()">
+          {{ caldavTesting ? T.caldavTesting : T.caldavTest }}
+        </button>
+        <button class="gen-btn" style="width:auto;padding:.5rem 1rem;margin:0;background:rgba(77,150,255,.15)"
+          :disabled="caldavSyncing" @click="syncCaldav()">
+          {{ caldavSyncing ? T.caldavSyncing : T.caldavSync }}
+        </button>
+      </div>
+
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:.4rem">
+        <span v-if="caldavTestMsg"
+          :style="`font-size:.82rem;color:${caldavTestMsg.startsWith('✅')?'#6bcb77':'#ff6b6b'}`">
+          {{ caldavTestMsg }}
+        </span>
+        <span v-if="caldavSyncMsg"
+          :style="`font-size:.82rem;color:${caldavSyncMsg.startsWith('✅')?'#6bcb77':'#ff6b6b'}`">
+          {{ caldavSyncMsg }}
+        </span>
+      </div>
+
+      <div v-if="caldavLastSync" style="font-size:.72rem;color:var(--muted);margin-top:.4rem">
+        {{ T.caldavLastSync }}: {{ new Date(caldavLastSync).toLocaleString(ui.lang==='es'?'es-ES':'en-GB') }}
       </div>
     </div>
 

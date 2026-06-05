@@ -47,6 +47,13 @@ interface Translations {
   statsByDow: string; statsDow: string[]
   statsByPrio: string; statsDone: string; statsOf: string
   statsAgendaDone: string; statsTasksDone: string
+  // CalDAV / Nextcloud
+  caldavSection: string; caldavServer: string; caldavUser: string
+  caldavPass: string; caldavCalendar: string; caldavHint: string
+  caldavSyncMeetings: string; caldavSyncDeadlines: string
+  caldavTest: string; caldavTesting: string; caldavSync: string; caldavSyncing: string
+  caldavLastSync: string; caldavNever: string
+  caldavOk: string; caldavErrIncomplete: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -106,6 +113,13 @@ export const LANG: Record<Lang, Translations> = {
     statsByDow: 'Promedio por día de la semana', statsDow: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
     statsByPrio: 'Tareas por prioridad', statsDone: 'completadas', statsOf: 'de',
     statsAgendaDone: 'Agenda completadas', statsTasksDone: 'Tareas completadas',
+    caldavSection: '📅 Nextcloud Calendar', caldavServer: 'URL Nextcloud', caldavUser: 'Usuario NC',
+    caldavPass: 'Contraseña / App password', caldavCalendar: 'Nombre del calendario',
+    caldavHint: 'Usa una contraseña de aplicación de Nextcloud (Ajustes → Seguridad).',
+    caldavSyncMeetings: 'Sincronizar reuniones', caldavSyncDeadlines: 'Sincronizar plazos',
+    caldavTest: 'Probar conexión', caldavTesting: 'Probando...', caldavSync: 'Sincronizar ahora', caldavSyncing: 'Sincronizando...',
+    caldavLastSync: 'Última sync', caldavNever: 'Nunca',
+    caldavOk: '✅ Conectado', caldavErrIncomplete: 'Rellena servidor, usuario y contraseña.',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -150,5 +164,12 @@ export const LANG: Record<Lang, Translations> = {
     statsByDow: 'Average by day of week', statsDow: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
     statsByPrio: 'Tasks by priority', statsDone: 'done', statsOf: 'of',
     statsAgendaDone: 'Agenda completed', statsTasksDone: 'Tasks completed',
+    caldavSection: '📅 Nextcloud Calendar', caldavServer: 'Nextcloud URL', caldavUser: 'NC Username',
+    caldavPass: 'Password / App password', caldavCalendar: 'Calendar name',
+    caldavHint: 'Use a Nextcloud app password (Settings → Security).',
+    caldavSyncMeetings: 'Sync meetings', caldavSyncDeadlines: 'Sync deadlines',
+    caldavTest: 'Test connection', caldavTesting: 'Testing...', caldavSync: 'Sync now', caldavSyncing: 'Syncing...',
+    caldavLastSync: 'Last sync', caldavNever: 'Never',
+    caldavOk: '✅ Connected', caldavErrIncomplete: 'Fill in server, username and password.',
   },
 }
