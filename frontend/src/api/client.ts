@@ -48,7 +48,8 @@ export const api = {
   caldav: {
     getConfig:  ()              => request<Record<string, unknown>>('/caldav/config'),
     saveConfig: (body: unknown) => request<{ ok: boolean }>('/caldav/config', { method: 'POST', body: JSON.stringify(body) }),
-    test:       ()              => request<{ ok: boolean; status?: number }>('/caldav/test', { method: 'POST' }),
+    test:       ()              => request<{ ok: boolean; status?: number; hint?: string }>('/caldav/test', { method: 'POST' }),
+    discover:   ()              => request<{ ok: boolean; calendars: { name: string; slug: string }[]; hint?: string }>('/caldav/discover', { method: 'POST' }),
     sync:       ()              => request<{ synced: number; deleted: number; errors: string[]; last_sync: string }>('/caldav/sync', { method: 'POST' }),
   },
 }

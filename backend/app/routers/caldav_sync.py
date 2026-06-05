@@ -70,20 +70,25 @@ def _make_ics(uid: str, summary: str, day: str, hora: str | None) -> bytes:
     return "\r\n".join(lines).encode("utf-8")
 
 
-def _propfind(url: str, auth: tuple) -> int:
+_PROPFIND_BODY = (
+    '<?xml version="1.0"?>'
+    '<d:propfind xmlns:d="DAV:" xmlns:cal="urn:ietf:params:xml:ns:caldav">'
+    "<d:prop><d:displayname/><d:resourcetype/></d:prop>"
+    "</d:propfind>"
+)
+
+
+def _propfind(url: str, auth: tuple, depth: str = "0"):
     import requests as req
-    body = (
-        '<?xml version="1.0"?>'
-        '<d:propfind xmlns:d="DAV:">'
-        "<d:prop><d:resourcetype/></d:prop>"
-        "</d:propfind>"
-    )
-    r = req.request(
+    return req.request(
         "PROPFIND", url, auth=auth,
-        headers={"Depth": "0", "Content-Type": "application/xml"},
-        data=body, timeout=10,
+        headers={"Depth": depth, "Content-Type": "application/xml"},
+        data=_PROPFIND_BODY, timeout=10,
     )
-    return r.status_code
+
+
+def _base_url(server: str, nc_user: str) -> str:
+    return f"{server.rstrip('/')}/remote.php/dav/calendars/{nc_user}/"
 
 
 # ── Endpoints ─────────────────────────────────────────────
@@ -116,15 +121,63 @@ def test_connection(request: Request):
     cfg  = _load(user)
     if not cfg.get("server_url") or not cfg.get("nc_username") or not cfg.get("nc_password"):
         raise HTTPException(400, "Configuración incompleta")
-    url  = _cal_url(cfg["server_url"], cfg["nc_username"], cfg.get("calendar_name", "personal"))
-    auth = (cfg["nc_username"], cfg["nc_password"])
+    auth     = (cfg["nc_username"], cfg["nc_password"])
+    cal_url  = _cal_url(cfg["server_url"], cfg["nc_username"], cfg.get("calendar_name", "personal"))
+    base_url = _base_url(cfg["server_url"], cfg["nc_username"])
     try:
-        status = _propfind(url, auth)
-        if status in (207, 200):
+        r = _propfind(cal_url, auth)
+        if r.status_code in (207, 200):
             return {"ok": True}
-        return {"ok": False, "status": status}
+        if r.status_code == 404:
+            # Calendario no encontrado — verificar si las credenciales sí son válidas
+            r2 = _propfind(base_url, auth)
+            if r2.status_code in (207, 200):
+                return {"ok": False, "status": 404, "hint": "calendar_not_found"}
+            return {"ok": False, "status": r2.status_code, "hint": "invalid_credentials"}
+        if r.status_code in (401, 403):
+            return {"ok": False, "status": r.status_code, "hint": "invalid_credentials"}
+        return {"ok": False, "status": r.status_code}
     except Exception as exc:
         raise HTTPException(502, str(exc))
+
+
+@router.post("/discover")
+def discover_calendars(request: Request):
+    import requests as req
+    import xml.etree.ElementTree as ET
+
+    user = current_user(request)
+    cfg  = _load(user)
+    if not cfg.get("server_url") or not cfg.get("nc_username") or not cfg.get("nc_password"):
+        raise HTTPException(400, "Configuración incompleta")
+    auth     = (cfg["nc_username"], cfg["nc_password"])
+    base_url = _base_url(cfg["server_url"], cfg["nc_username"])
+    try:
+        r = _propfind(base_url, auth, depth="1")
+        if r.status_code in (401, 403):
+            return {"ok": False, "hint": "invalid_credentials", "calendars": []}
+        if r.status_code not in (207, 200):
+            return {"ok": False, "status": r.status_code, "calendars": []}
+    except Exception as exc:
+        raise HTTPException(502, str(exc))
+
+    ns = {"d": "DAV:", "cal": "urn:ietf:params:xml:ns:caldav"}
+    calendars = []
+    try:
+        root = ET.fromstring(r.text)
+        for resp in root.findall("d:response", ns):
+            rt = resp.find(".//d:resourcetype", ns)
+            if rt is None or rt.find("cal:calendar", ns) is None:
+                continue
+            href = resp.findtext("d:href", "", ns)
+            slug = href.rstrip("/").split("/")[-1]
+            name = resp.findtext(".//d:displayname", "", ns) or slug
+            if slug:
+                calendars.append({"name": name, "slug": slug})
+    except ET.ParseError as exc:
+        logger.warning("XML parse error in discover: %s", exc)
+
+    return {"ok": True, "calendars": calendars}
 
 
 @router.post("/sync")

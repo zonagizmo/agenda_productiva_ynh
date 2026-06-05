@@ -34,12 +34,14 @@ const caldavCfg = ref({
   server_url: '', nc_username: '', nc_password: '',
   calendar_name: 'personal', sync_reuniones: true, sync_plazos: true,
 })
-const caldavLastSync  = ref<string | null>(null)
-const caldavTesting   = ref(false)
-const caldavSyncing   = ref(false)
-const caldavTestMsg   = ref('')
-const caldavSyncMsg   = ref('')
-const showCaldavPass  = ref(false)
+const caldavLastSync    = ref<string | null>(null)
+const caldavTesting     = ref(false)
+const caldavSyncing     = ref(false)
+const caldavDiscovering = ref(false)
+const caldavTestMsg     = ref('')
+const caldavSyncMsg     = ref('')
+const caldavCalendars   = ref<{ name: string; slug: string }[]>([])
+const showCaldavPass    = ref(false)
 
 const summary = computed(() => {
   const c  = cfg.config
@@ -203,12 +205,44 @@ async function testCaldav() {
   await saveCaldavConfig()
   try {
     const r = await api.caldav.test()
-    caldavTestMsg.value = r.ok ? T.value.caldavOk : `❌ HTTP ${r.status}`
+    if (r.ok) {
+      caldavTestMsg.value = T.value.caldavOk
+    } else if (r.hint === 'calendar_not_found') {
+      caldavTestMsg.value = T.value.caldavErrCalNotFound
+    } else if (r.hint === 'invalid_credentials') {
+      caldavTestMsg.value = T.value.caldavErrCreds
+    } else {
+      caldavTestMsg.value = `❌ HTTP ${r.status}`
+    }
   } catch (e) {
     caldavTestMsg.value = `❌ ${(e as Error).message}`
   } finally {
     caldavTesting.value = false
-    setTimeout(() => { caldavTestMsg.value = '' }, 4000)
+    setTimeout(() => { caldavTestMsg.value = '' }, 6000)
+  }
+}
+
+async function discoverCaldav() {
+  const c = caldavCfg.value
+  if (!c.server_url || !c.nc_username || !c.nc_password) {
+    caldavTestMsg.value = `❌ ${T.value.caldavErrIncomplete}`; return
+  }
+  caldavDiscovering.value = true; caldavCalendars.value = []; caldavTestMsg.value = ''
+  await saveCaldavConfig()
+  try {
+    const r = await api.caldav.discover()
+    if (r.ok) {
+      caldavCalendars.value = r.calendars
+      if (!r.calendars.length) caldavTestMsg.value = '⚠️ No se encontraron calendarios.'
+    } else if (r.hint === 'invalid_credentials') {
+      caldavTestMsg.value = T.value.caldavErrCreds
+    } else {
+      caldavTestMsg.value = `❌ HTTP error`
+    }
+  } catch (e) {
+    caldavTestMsg.value = `❌ ${(e as Error).message}`
+  } finally {
+    caldavDiscovering.value = false
   }
 }
 
@@ -461,10 +495,25 @@ async function onImportFile(event: Event) {
           </button>
         </div>
       </div>
-      <div class="config-row">
-        <span class="config-row-label">{{ T.caldavCalendar }}</span>
-        <input type="text" class="config-time" style="flex:1" v-model="caldavCfg.calendar_name"
-          placeholder="personal" @change="saveCaldavConfig()" />
+      <div class="config-row" style="align-items:flex-start;gap:.5rem">
+        <span class="config-row-label" style="padding-top:.3rem">{{ T.caldavCalendar }}</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:.4rem">
+          <input type="text" class="config-time" style="width:100%" v-model="caldavCfg.calendar_name"
+            placeholder="personal" @change="saveCaldavConfig()" />
+          <button class="gen-btn" style="width:auto;align-self:flex-start;padding:.38rem .8rem;margin:0;font-size:.75rem"
+            :disabled="caldavDiscovering" @click="discoverCaldav()">
+            {{ caldavDiscovering ? T.caldavDiscovering : T.caldavDiscover }}
+          </button>
+          <div v-if="caldavCalendars.length" class="caldav-cal-list">
+            <div class="caldav-cal-label">{{ T.caldavPickCal }}</div>
+            <button v-for="cal in caldavCalendars" :key="cal.slug"
+              class="caldav-cal-btn"
+              :class="{ active: caldavCfg.calendar_name === cal.slug }"
+              @click="caldavCfg.calendar_name = cal.slug; saveCaldavConfig()">
+              {{ cal.name }}<span class="caldav-cal-slug">{{ cal.slug }}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <p style="font-size:.72rem;color:var(--muted);padding:.3rem 0 .6rem;border-bottom:1px solid var(--border)">

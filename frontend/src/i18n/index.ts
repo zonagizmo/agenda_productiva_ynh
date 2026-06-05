@@ -52,8 +52,10 @@ interface Translations {
   caldavPass: string; caldavCalendar: string; caldavHint: string
   caldavSyncMeetings: string; caldavSyncDeadlines: string
   caldavTest: string; caldavTesting: string; caldavSync: string; caldavSyncing: string
+  caldavDiscover: string; caldavDiscovering: string; caldavPickCal: string
   caldavLastSync: string; caldavNever: string
   caldavOk: string; caldavErrIncomplete: string
+  caldavErrCalNotFound: string; caldavErrCreds: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -118,8 +120,11 @@ export const LANG: Record<Lang, Translations> = {
     caldavHint: 'Usa una contraseña de aplicación de Nextcloud (Ajustes → Seguridad).',
     caldavSyncMeetings: 'Sincronizar reuniones', caldavSyncDeadlines: 'Sincronizar plazos',
     caldavTest: 'Probar conexión', caldavTesting: 'Probando...', caldavSync: 'Sincronizar ahora', caldavSyncing: 'Sincronizando...',
+    caldavDiscover: '🔍 Descubrir calendarios', caldavDiscovering: 'Buscando...', caldavPickCal: 'Selecciona un calendario:',
     caldavLastSync: 'Última sync', caldavNever: 'Nunca',
     caldavOk: '✅ Conectado', caldavErrIncomplete: 'Rellena servidor, usuario y contraseña.',
+    caldavErrCalNotFound: '⚠️ Credenciales OK pero el calendario no existe. Usa "Descubrir calendarios".',
+    caldavErrCreds: '❌ Credenciales incorrectas.',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -169,7 +174,10 @@ export const LANG: Record<Lang, Translations> = {
     caldavHint: 'Use a Nextcloud app password (Settings → Security).',
     caldavSyncMeetings: 'Sync meetings', caldavSyncDeadlines: 'Sync deadlines',
     caldavTest: 'Test connection', caldavTesting: 'Testing...', caldavSync: 'Sync now', caldavSyncing: 'Syncing...',
+    caldavDiscover: '🔍 Discover calendars', caldavDiscovering: 'Searching...', caldavPickCal: 'Select a calendar:',
     caldavLastSync: 'Last sync', caldavNever: 'Never',
     caldavOk: '✅ Connected', caldavErrIncomplete: 'Fill in server, username and password.',
+    caldavErrCalNotFound: '⚠️ Credentials OK but calendar not found. Use "Discover calendars".',
+    caldavErrCreds: '❌ Invalid credentials.',
   },
 }
