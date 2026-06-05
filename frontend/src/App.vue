@@ -39,7 +39,8 @@ async function startApp() {
   }
   notif.check(ui.lang)
   tasks.checkAndResetRecurring()
-  _tickInterval = setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring() }, 60_000)
+  await notif.setupNative(ui.lang)
+  _tickInterval = setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring(); notif.scheduleNative(ui.lang) }, 60_000)
   appReady.value = true
 }
 
