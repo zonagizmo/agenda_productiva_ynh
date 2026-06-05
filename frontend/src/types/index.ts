@@ -1,5 +1,5 @@
 export type Lang     = 'es' | 'en'
-export type Tab      = 'agenda' | 'tareas' | 'historial' | 'config'
+export type Tab      = 'agenda' | 'tareas' | 'historial' | 'stats' | 'config'
 export type Priority = 'alta' | 'media' | 'baja'
 export type SideTab  = 'cal' | 'avisos'
 

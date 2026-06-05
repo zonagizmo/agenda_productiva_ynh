@@ -2,7 +2,7 @@ import type { Lang, SectionDef } from '@/types'
 
 interface Translations {
   appTitle: string
-  tabs: { agenda: string; tareas: string; historial: string; config: string }
+  tabs: { agenda: string; tareas: string; historial: string; stats: string; config: string }
   today: string; past: string; upcoming: string; planAt: string
   sections: SectionDef[]
   addBtn: string; genBtn: string; generating: string
@@ -40,6 +40,13 @@ interface Translations {
   // Backup
   backupSection: string; backupNow: string; backupRunning: string
   backupLastLabel: string; backupNever: string; backupFiles: string; backupDone: string
+  // Stats
+  statsTitle: string; statsStreak: string; statsStreakDays: string
+  statsTotalDone: string; statsActiveDays: string
+  statsLast14: string; statsNoData: string
+  statsByDow: string; statsDow: string[]
+  statsByPrio: string; statsDone: string; statsOf: string
+  statsAgendaDone: string; statsTasksDone: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -58,7 +65,7 @@ const SECTIONS_EN: SectionDef[] = [
 export const LANG: Record<Lang, Translations> = {
   es: {
     appTitle: 'Agenda Productiva',
-    tabs: { agenda: '📅 Agenda', tareas: '📋 Tareas', historial: '📚 Historial', config: '⚙️ Config' },
+    tabs: { agenda: '📅 Agenda', tareas: '📋 Tareas', historial: '📚 Historial', stats: '📊 Stats', config: '⚙️ Config' },
     today: '📍 Hoy', past: '📁 Pasado', upcoming: '📅 Próximo', planAt: 'Plan a las',
     sections: SECTIONS_ES,
     addBtn: '+ Añadir', genBtn: '⚡ Generar plan del día', generating: 'Generando...',
@@ -93,10 +100,16 @@ export const LANG: Record<Lang, Translations> = {
     backupSection: '🗄️ Backup automático', backupNow: 'Backup ahora', backupRunning: 'Haciendo backup...',
     backupLastLabel: 'Último backup', backupNever: 'Nunca', backupFiles: 'archivos guardados',
     backupDone: '✅ Backup completado',
+    statsTitle: '📊 Estadísticas de productividad', statsStreak: '🔥 Racha', statsStreakDays: 'días seguidos',
+    statsTotalDone: '✅ Completados', statsActiveDays: '📅 Días activos',
+    statsLast14: 'Últimas 2 semanas', statsNoData: 'Sin datos suficientes todavía.',
+    statsByDow: 'Promedio por día de la semana', statsDow: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+    statsByPrio: 'Tareas por prioridad', statsDone: 'completadas', statsOf: 'de',
+    statsAgendaDone: 'Agenda completadas', statsTasksDone: 'Tareas completadas',
   },
   en: {
     appTitle: 'Productive Agenda',
-    tabs: { agenda: '📅 Agenda', tareas: '📋 Tasks', historial: '📚 History', config: '⚙️ Config' },
+    tabs: { agenda: '📅 Agenda', tareas: '📋 Tasks', historial: '📚 History', stats: '📊 Stats', config: '⚙️ Config' },
     today: '📍 Today', past: '📁 Past', upcoming: '📅 Upcoming', planAt: 'Plan at',
     sections: SECTIONS_EN,
     addBtn: '+ Add', genBtn: '⚡ Generate day plan', generating: 'Generating...',
@@ -131,5 +144,11 @@ export const LANG: Record<Lang, Translations> = {
     backupSection: '🗄️ Automatic backup', backupNow: 'Backup now', backupRunning: 'Backing up...',
     backupLastLabel: 'Last backup', backupNever: 'Never', backupFiles: 'files saved',
     backupDone: '✅ Backup complete',
+    statsTitle: '📊 Productivity stats', statsStreak: '🔥 Streak', statsStreakDays: 'days in a row',
+    statsTotalDone: '✅ Completed', statsActiveDays: '📅 Active days',
+    statsLast14: 'Last 2 weeks', statsNoData: 'Not enough data yet.',
+    statsByDow: 'Average by day of week', statsDow: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    statsByPrio: 'Tasks by priority', statsDone: 'done', statsOf: 'of',
+    statsAgendaDone: 'Agenda completed', statsTasksDone: 'Tasks completed',
   },
 }

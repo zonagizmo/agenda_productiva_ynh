@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AgendaView    from '@/components/agenda/AgendaView.vue'
 import TareasView    from '@/components/tasks/TareasView.vue'
 import HistorialView from '@/components/historial/HistorialView.vue'
+import StatsView     from '@/components/stats/StatsView.vue'
 import ConfigView    from '@/components/config/ConfigView.vue'
 import CapacitorSetup from '@/components/CapacitorSetup.vue'
 import NativeLogin    from '@/components/NativeLogin.vue'
@@ -96,6 +97,7 @@ onMounted(async () => {
     <div v-else style="flex:1;overflow-y:auto">
       <TareasView    v-if="ui.tab==='tareas'" />
       <HistorialView v-else-if="ui.tab==='historial'" />
+      <StatsView     v-else-if="ui.tab==='stats'" />
       <ConfigView    v-else-if="ui.tab==='config'" />
     </div>
   </div>
