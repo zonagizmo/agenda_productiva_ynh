@@ -41,4 +41,8 @@ export const api = {
   providers:   ()              => request<Providers>('/providers'),
   buildPrompt: (body: unknown) => request<{ prompt?: string; error?: string }>('/build-prompt', { method: 'POST', body: JSON.stringify(body) }),
   version:     ()              => request<{ version: string; label: string }>('/version'),
+  backup: {
+    status: ()  => request<{ last_backup: string | null; file_count: number }>('/backup/status'),
+    run:    ()  => request<{ timestamp: string; users: string[]; errors: string[] }>('/backup/run', { method: 'POST' }),
+  },
 }

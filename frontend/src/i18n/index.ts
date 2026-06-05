@@ -37,6 +37,9 @@ interface Translations {
   // Export / Import
   exportSection: string; exportBtn: string; exporting: string
   importBtn: string; importWarning: string; importingMsg: string; importedMsg: string
+  // Backup
+  backupSection: string; backupNow: string; backupRunning: string
+  backupLastLabel: string; backupNever: string; backupFiles: string; backupDone: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -87,6 +90,9 @@ export const LANG: Record<Lang, Translations> = {
     exportSection: '💾 Exportar / Importar datos', exportBtn: '⬇️ Exportar JSON', exporting: 'Exportando...',
     importBtn: '⬆️ Importar JSON', importWarning: 'Importar sobrescribirá todos los datos existentes.',
     importingMsg: 'Importando...', importedMsg: '✅ Importado. Recargando...',
+    backupSection: '🗄️ Backup automático', backupNow: 'Backup ahora', backupRunning: 'Haciendo backup...',
+    backupLastLabel: 'Último backup', backupNever: 'Nunca', backupFiles: 'archivos guardados',
+    backupDone: '✅ Backup completado',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -122,5 +128,8 @@ export const LANG: Record<Lang, Translations> = {
     exportSection: '💾 Export / Import data', exportBtn: '⬇️ Export JSON', exporting: 'Exporting...',
     importBtn: '⬆️ Import JSON', importWarning: 'Import will overwrite all existing data.',
     importingMsg: 'Importing...', importedMsg: '✅ Imported. Reloading...',
+    backupSection: '🗄️ Automatic backup', backupNow: 'Backup now', backupRunning: 'Backing up...',
+    backupLastLabel: 'Last backup', backupNever: 'Never', backupFiles: 'files saved',
+    backupDone: '✅ Backup complete',
   },
 }

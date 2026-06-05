@@ -25,6 +25,10 @@ const importInput   = ref<HTMLInputElement | null>(null)
 
 const EXPORT_KEYS = ['agenda-v3', 'tasks-v1', 'labels-v1', 'config-v1', 'rollover-log'] as const
 
+const backupStatus  = ref<{ last_backup: string | null; file_count: number } | null>(null)
+const backingUp     = ref(false)
+const backupMsg     = ref('')
+
 const summary = computed(() => {
   const c  = cfg.config
   const t  = T.value
@@ -93,6 +97,9 @@ onMounted(async () => {
     const { value } = await Preferences.get({ key: 'serverUrl' })
     serverUrl.value = value ?? ''
   }
+  try {
+    backupStatus.value = await api.backup.status()
+  } catch { /* non-critical */ }
 })
 
 async function changeServer() {
@@ -136,6 +143,30 @@ async function exportData() {
 }
 
 function triggerImport() { importInput.value?.click() }
+
+function fmtBackupDate(iso: string | null): string {
+  if (!iso) return T.value.backupNever
+  const d = new Date(iso)
+  return d.toLocaleString(ui.lang === 'es' ? 'es-ES' : 'en-GB', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+async function runBackup() {
+  backingUp.value = true
+  backupMsg.value = ''
+  try {
+    await api.backup.run()
+    backupStatus.value = await api.backup.status()
+    backupMsg.value = T.value.backupDone
+    setTimeout(() => { backupMsg.value = '' }, 3000)
+  } catch (e) {
+    backupMsg.value = `❌ ${(e as Error).message}`
+  } finally {
+    backingUp.value = false
+  }
+}
 
 async function onImportFile(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -341,6 +372,32 @@ async function onImportFile(event: Event) {
             {{ importStatus }}
           </span>
         </div>
+      </div>
+    </div>
+
+    <!-- Backup automático -->
+    <div class="config-block">
+      <div class="config-section-title">{{ T.backupSection }}</div>
+
+      <div class="config-row" style="align-items:flex-start">
+        <span class="config-row-label">{{ T.backupLastLabel }}</span>
+        <span style="font-size:.82rem;color:var(--muted);flex:1">
+          {{ fmtBackupDate(backupStatus?.last_backup ?? null) }}
+          <span v-if="backupStatus && backupStatus.file_count > 0" style="margin-left:.5rem;opacity:.6">
+            ({{ backupStatus.file_count }} {{ T.backupFiles }})
+          </span>
+        </span>
+      </div>
+
+      <div class="config-row" style="gap:.8rem;flex-wrap:wrap">
+        <button class="gen-btn" style="width:auto;padding:.55rem 1.2rem;margin:0"
+          :disabled="backingUp" @click="runBackup()">
+          {{ backingUp ? T.backupRunning : T.backupNow }}
+        </button>
+        <span v-if="backupMsg"
+          :style="`font-size:.82rem;color:${backupMsg.startsWith('✅') ? '#6bcb77' : '#ff6b6b'}`">
+          {{ backupMsg }}
+        </span>
       </div>
     </div>
   </div>
