@@ -8,34 +8,31 @@
     android:padding="10dp">
 
     <!-- Header -->
-    <LinearLayout
+    <TextView
+        android:id="@+id/widget_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="4dp">
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="📅 Agenda"
-            android:textColor="#EEEEFF"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/widget_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#7777AA"
-            android:textSize="10sp" />
-    </LinearLayout>
+        android:text="Agenda"
+        android:textColor="#EEEEFF"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="2dp" />
 
-    <!-- Divider -->
-    <View
+    <TextView
+        android:id="@+id/widget_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#9999CC"
+        android:textSize="10sp"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Divider (ImageView is guaranteed supported in RemoteViews) -->
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#3A3A6A"
-        android:layout_marginBottom="4dp" />
+        android:layout_marginBottom="4dp"
+        android:contentDescription="" />
 
     <!-- Item slots (5 max) -->
     <TextView android:id="@+id/widget_item0"

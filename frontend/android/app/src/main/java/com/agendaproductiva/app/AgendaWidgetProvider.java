@@ -28,41 +28,45 @@ public class AgendaWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
-        for (int id : ids) mgr.updateAppWidget(id, buildViews(ctx));
+        RemoteViews views = buildViews(ctx);
+        for (int id : ids) {
+            try {
+                mgr.updateAppWidget(id, views);
+            } catch (Throwable e) {
+                // If a specific widget ID fails, skip it
+            }
+        }
     }
 
     static RemoteViews buildViews(Context ctx) {
-        RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.widget_agenda);
-
-        // Tap opens app
-        Intent intent = new Intent(ctx, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pi = PendingIntent.getActivity(ctx, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.widget_root, pi);
-
-        SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String json = prefs.getString(PREFS_KEY, null);
-
-        if (json == null) {
-            // No data yet
-            for (int id : ITEM_IDS) views.setViewVisibility(id, View.GONE);
-            views.setViewVisibility(R.id.widget_more, View.GONE);
-            views.setViewVisibility(R.id.widget_empty, View.VISIBLE);
-            views.setTextViewText(R.id.widget_date, "");
-            return views;
-        }
-
         try {
+            RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.widget_agenda);
+
+            // Tap opens app
+            Intent intent = new Intent(ctx, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pi = PendingIntent.getActivity(ctx, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            views.setOnClickPendingIntent(R.id.widget_root, pi);
+
+            SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String json = prefs.getString(PREFS_KEY, null);
+
+            if (json == null) {
+                for (int id : ITEM_IDS) views.setViewVisibility(id, View.GONE);
+                views.setViewVisibility(R.id.widget_more, View.GONE);
+                views.setViewVisibility(R.id.widget_empty, View.VISIBLE);
+                views.setTextViewText(R.id.widget_date, "");
+                return views;
+            }
+
             JSONObject data  = new JSONObject(json);
             String dateKey   = data.optString("date", "");
             JSONArray items  = data.optJSONArray("items");
             if (items == null) items = new JSONArray();
 
-            // Format date
             views.setTextViewText(R.id.widget_date, formatDate(dateKey));
 
-            // Populate item slots
             int count = items.length();
             int shown = Math.min(count, ITEM_IDS.length);
             for (int i = 0; i < ITEM_IDS.length; i++) {
@@ -72,32 +76,36 @@ public class AgendaWidgetProvider extends AppWidgetProvider {
                     String text    = item.optString("text", "");
                     String prefix  = done ? "✓ " : "○ ";
                     views.setTextViewText(ITEM_IDS[i], prefix + text);
-                    views.setInt(ITEM_IDS[i], "setTextColor",
-                            done ? 0xFF7777AA : 0xFFEEEEFF);
+                    views.setInt(ITEM_IDS[i], "setTextColor", done ? 0xFF7777AA : 0xFFEEEEFF);
                     views.setViewVisibility(ITEM_IDS[i], View.VISIBLE);
                 } else {
                     views.setViewVisibility(ITEM_IDS[i], View.GONE);
                 }
             }
 
-            // "...and N more"
             if (count > ITEM_IDS.length) {
                 int extra = count - ITEM_IDS.length;
-                views.setTextViewText(R.id.widget_more, "+ " + extra + " más");
+                views.setTextViewText(R.id.widget_more, "+ " + extra + " mas");
                 views.setViewVisibility(R.id.widget_more, View.VISIBLE);
             } else {
                 views.setViewVisibility(R.id.widget_more, View.GONE);
             }
 
-            // Empty state
             views.setViewVisibility(R.id.widget_empty, count == 0 ? View.VISIBLE : View.GONE);
 
-        } catch (Exception e) {
-            views.setViewVisibility(R.id.widget_empty, View.VISIBLE);
-            views.setTextViewText(R.id.widget_empty, "Error al leer datos");
-        }
+            return views;
 
-        return views;
+        } catch (Throwable e) {
+            // Return minimal safe view on any error
+            RemoteViews fallback = new RemoteViews(ctx.getPackageName(), R.layout.widget_agenda);
+            try {
+                for (int id : ITEM_IDS) fallback.setViewVisibility(id, View.GONE);
+                fallback.setViewVisibility(R.id.widget_more, View.GONE);
+                fallback.setViewVisibility(R.id.widget_empty, View.VISIBLE);
+                fallback.setTextViewText(R.id.widget_empty, "Error: " + e.getMessage());
+            } catch (Exception ignored) {}
+            return fallback;
+        }
     }
 
     private static String formatDate(String dateKey) {
@@ -106,7 +114,7 @@ public class AgendaWidgetProvider extends AppWidgetProvider {
             Date d = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateKey);
             if (d == null) return dateKey;
             return new SimpleDateFormat("EEE d MMM", Locale.getDefault()).format(d);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return dateKey;
         }
     }
