@@ -7,13 +7,14 @@ import StatsView     from '@/components/stats/StatsView.vue'
 import ConfigView    from '@/components/config/ConfigView.vue'
 import CapacitorSetup from '@/components/CapacitorSetup.vue'
 import NativeLogin    from '@/components/NativeLogin.vue'
-import { useUiStore }     from '@/stores/ui'
-import { useAgendaStore } from '@/stores/agenda'
-import { useTasksStore }  from '@/stores/tasks'
-import { useConfigStore } from '@/stores/config'
-import { useNotifStore }  from '@/stores/notifications'
+import { useUiStore }       from '@/stores/ui'
+import { useAgendaStore }   from '@/stores/agenda'
+import { useTasksStore }    from '@/stores/tasks'
+import { useConfigStore }   from '@/stores/config'
+import { useNotifStore }    from '@/stores/notifications'
+import { useTemplatesStore } from '@/stores/templates'
 import { LANG } from '@/i18n'
-import { api, initNativeApi } from '@/api/client'
+import { api, apiMeta, initNativeApi } from '@/api/client'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 
@@ -22,6 +23,7 @@ const agenda = useAgendaStore()
 const tasks  = useTasksStore()
 const cfg    = useConfigStore()
 const notif  = useNotifStore()
+const tpls   = useTemplatesStore()
 const T      = computed(() => LANG[ui.lang])
 
 const showSetup   = ref(false)
@@ -29,11 +31,30 @@ const showLogin   = ref(false)
 const appReady    = ref(false)
 
 let _tickInterval: ReturnType<typeof setInterval> | undefined
-onUnmounted(() => clearInterval(_tickInterval))
+let _syncInterval: ReturnType<typeof setInterval> | undefined
+let _lastStamp    = ''
+
+async function checkSync() {
+  try {
+    const r = await api.storage.stamp()
+    if (_lastStamp && r.stamp !== _lastStamp && Date.now() - apiMeta.lastSaveMs > 10_000) {
+      await Promise.all([agenda.load(), tasks.load(), cfg.load(), tpls.load()])
+    }
+    _lastStamp = r.stamp
+  } catch { /* ignore */ }
+}
+
+function _onVisibility() { if (document.visibilityState === 'visible') checkSync() }
+
+onUnmounted(() => {
+  clearInterval(_tickInterval)
+  clearInterval(_syncInterval)
+  document.removeEventListener('visibilitychange', _onVisibility)
+})
 
 async function startApp() {
   try { const v = await api.version(); ui.version = v.version ?? '' } catch { /* ignore */ }
-  await Promise.all([agenda.load(), tasks.load(), cfg.load()])
+  await Promise.all([agenda.load(), tasks.load(), cfg.load(), tpls.load()])
   if ('serviceWorker' in navigator && !Capacitor.isNativePlatform()) {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* ignore */ })
   }
@@ -41,6 +62,10 @@ async function startApp() {
   tasks.checkAndResetRecurring()
   await notif.setupNative(ui.lang)
   _tickInterval = setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring(); notif.scheduleNative(ui.lang) }, 60_000)
+  // Real-time sync: poll every 30s + on tab focus
+  await checkSync()
+  _syncInterval = setInterval(checkSync, 30_000)
+  document.addEventListener('visibilitychange', _onVisibility)
   appReady.value = true
 }
 

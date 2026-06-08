@@ -57,6 +57,10 @@ interface Translations {
   caldavLastSync: string; caldavNever: string
   caldavOk: string; caldavErrIncomplete: string
   caldavErrCalNotFound: string; caldavErrCreds: string
+  // Templates
+  tplSave: string; tplApply: string; tplName: string
+  tplSaved: string; tplApplied: string; tplNoTemplates: string
+  tplSaveBtn: string; tplCancelBtn: string; tplDelete: string; tplTitle: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -127,6 +131,10 @@ export const LANG: Record<Lang, Translations> = {
     caldavOk: '✅ Conectado', caldavErrIncomplete: 'Rellena servidor, usuario y contraseña.',
     caldavErrCalNotFound: '⚠️ Credenciales OK pero el calendario no existe. Usa "Descubrir calendarios".',
     caldavErrCreds: '❌ Credenciales incorrectas.',
+    tplSave: '💾 Guardar como plantilla', tplApply: '📋 Aplicar plantilla',
+    tplName: 'Nombre de la plantilla...', tplSaved: '✅ Plantilla guardada',
+    tplApplied: '✅ Plantilla aplicada', tplNoTemplates: 'No hay plantillas guardadas.',
+    tplSaveBtn: 'Guardar', tplCancelBtn: 'Cancelar', tplDelete: '✕', tplTitle: 'Plantillas guardadas',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -182,5 +190,9 @@ export const LANG: Record<Lang, Translations> = {
     caldavOk: '✅ Connected', caldavErrIncomplete: 'Fill in server, username and password.',
     caldavErrCalNotFound: '⚠️ Credentials OK but calendar not found. Use "Discover calendars".',
     caldavErrCreds: '❌ Invalid credentials.',
+    tplSave: '💾 Save as template', tplApply: '📋 Apply template',
+    tplName: 'Template name...', tplSaved: '✅ Template saved',
+    tplApplied: '✅ Template applied', tplNoTemplates: 'No saved templates.',
+    tplSaveBtn: 'Save', tplCancelBtn: 'Cancel', tplDelete: '✕', tplTitle: 'Saved templates',
   },
 }

@@ -7,25 +7,35 @@ import { useTasksStore } from '@/stores/tasks'
 import { useConfigStore } from '@/stores/config'
 import { useUiStore } from '@/stores/ui'
 import { useNotifStore } from '@/stores/notifications'
+import { useTemplatesStore } from '@/stores/templates'
 import { LANG } from '@/i18n'
 import { api } from '@/api/client'
 import { callAiDirect } from '@/composables/useAiCall'
 import { isToday, isPast, fmtLong, fmtShort, todayKey } from '@/composables/useDate'
-import type { Priority, AgendaItem } from '@/types'
+import type { Priority, AgendaItem, DayTemplate } from '@/types'
 
 const agenda = useAgendaStore()
 const tasks  = useTasksStore()
 const cfg    = useConfigStore()
 const ui     = useUiStore()
 const notif  = useNotifStore()
+const tpls   = useTemplatesStore()
 const T      = computed(() => LANG[ui.lang])
 
 const generating    = ref(false)
 const error         = ref('')
 const rolloverMsg   = ref('')
 const sectionsOpen  = ref(!agenda.day.plan)
+const showTplSave   = ref(false)
+const showTplApply  = ref(false)
+const tplName       = ref('')
+const tplMsg        = ref('')
 let   rolloverTimer: ReturnType<typeof setTimeout> | null = null
-onUnmounted(() => { if (rolloverTimer) clearTimeout(rolloverTimer) })
+let   tplTimer:      ReturnType<typeof setTimeout> | null = null
+onUnmounted(() => {
+  if (rolloverTimer) clearTimeout(rolloverTimer)
+  if (tplTimer)      clearTimeout(tplTimer)
+})
 
 watch(() => agenda.selDate, () => { sectionsOpen.value = !agenda.day.plan })
 
@@ -119,6 +129,40 @@ const hasRolloverItems = computed(() => {
     d[k].some(x => x.texto.trim() && !x.done && !x.deferred)
   )
 })
+
+async function doSaveTemplate() {
+  if (!tplName.value.trim()) return
+  await tpls.saveTemplate(tplName.value, agenda.day)
+  tplMsg.value = T.value.tplSaved
+  showTplSave.value = false
+  tplName.value = ''
+  if (tplTimer) clearTimeout(tplTimer)
+  tplTimer = setTimeout(() => { tplMsg.value = '' }, 2500)
+}
+
+function applyTemplate(tpl: DayTemplate) {
+  const d = agenda.ensureDay()
+  for (const k of ['objetivos', 'tareas', 'reuniones', 'plazos'] as const) {
+    const texts = tpl.sections[k]
+    if (!texts.length) continue
+    const existing = d[k].filter(x => x.texto.trim())
+    if (!existing.length) {
+      d[k] = texts.map(t => agenda.newItem(t))
+    } else {
+      for (const t of texts) d[k].push(agenda.newItem(t))
+    }
+  }
+  agenda.save()
+  showTplApply.value = false
+  tplMsg.value = T.value.tplApplied
+  if (tplTimer) clearTimeout(tplTimer)
+  tplTimer = setTimeout(() => { tplMsg.value = '' }, 2500)
+}
+
+function tplCount(tpl: DayTemplate) {
+  return tpl.sections.objetivos.length + tpl.sections.tareas.length +
+         tpl.sections.reuniones.length + tpl.sections.plazos.length
+}
 
 function doRollover() {
   const workDays: number[] = cfg.config.diasLaborables?.length ? cfg.config.diasLaborables : [1,2,3,4,5]
@@ -254,6 +298,37 @@ function doRollover() {
             <button class="day-nav-btn" @click="agenda.navigate(1)">›</button>
           </div>
         </div>
+
+        <!-- Templates -->
+        <div class="tpl-row">
+          <button class="tpl-btn" @click="showTplSave=!showTplSave; showTplApply=false">{{ T.tplSave }}</button>
+          <button class="tpl-btn" @click="showTplApply=!showTplApply; showTplSave=false">
+            {{ T.tplApply }}{{ tpls.templates.length ? ` (${tpls.templates.length})` : '' }}
+          </button>
+        </div>
+
+        <div v-if="showTplSave" class="tpl-panel">
+          <input v-model="tplName" class="tpl-input" :placeholder="T.tplName" @keyup.enter="doSaveTemplate" />
+          <div class="tpl-panel-btns">
+            <button class="tpl-save-btn" :disabled="!tplName.trim()" @click="doSaveTemplate">{{ T.tplSaveBtn }}</button>
+            <button class="tpl-cancel-btn" @click="showTplSave=false; tplName=''">{{ T.tplCancelBtn }}</button>
+          </div>
+        </div>
+
+        <div v-if="showTplApply" class="tpl-panel">
+          <p class="tpl-panel-title">{{ T.tplTitle }}</p>
+          <p v-if="!tpls.templates.length" class="tpl-empty">{{ T.tplNoTemplates }}</p>
+          <div v-for="tpl in tpls.templates" :key="tpl.id" class="tpl-item">
+            <div class="tpl-item-info">
+              <span class="tpl-item-name">{{ tpl.name }}</span>
+              <span class="tpl-item-cnt">{{ tplCount(tpl) }} items</span>
+            </div>
+            <button class="tpl-apply-btn" @click="applyTemplate(tpl)">{{ T.tplApply }}</button>
+            <button class="tpl-del-btn" @click="tpls.removeTemplate(tpl.id)">{{ T.tplDelete }}</button>
+          </div>
+        </div>
+
+        <p v-if="tplMsg" class="tpl-msg">{{ tplMsg }}</p>
 
         <!-- Sections -->
         <div class="sections-card">

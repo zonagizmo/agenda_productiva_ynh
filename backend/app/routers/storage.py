@@ -12,6 +12,14 @@ class SetBody(BaseModel):
     value: str
 
 
+@router.get("/stamp")
+def storage_stamp(request: Request):
+    user = current_user(request)
+    init_db(user)
+    stamp = get_value(user, '_stamp')
+    return {"stamp": stamp or "0"}
+
+
 @router.get("/{key}")
 def storage_get(key: str, request: Request):
     user = current_user(request)

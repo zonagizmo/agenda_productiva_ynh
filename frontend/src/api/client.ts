@@ -32,11 +32,14 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export const apiMeta = { lastSaveMs: 0 }
+
 export const api = {
   storage: {
     get:    (key: string)               => request<{ value: string | null }>(`/storage/${key}`),
-    set:    (key: string, val: unknown) => request<{ ok: boolean }>(`/storage/${key}`, { method: 'POST', body: JSON.stringify({ value: JSON.stringify(val) }) }),
+    set:    (key: string, val: unknown) => { apiMeta.lastSaveMs = Date.now(); return request<{ ok: boolean }>(`/storage/${key}`, { method: 'POST', body: JSON.stringify({ value: JSON.stringify(val) }) }) },
     delete: (key: string)               => request<{ ok: boolean }>(`/storage/${key}`, { method: 'DELETE' }),
+    stamp:  ()                          => request<{ stamp: string }>('/storage/stamp'),
   },
   providers:   ()              => request<Providers>('/providers'),
   buildPrompt: (body: unknown) => request<{ prompt?: string; error?: string }>('/build-prompt', { method: 'POST', body: JSON.stringify(body) }),

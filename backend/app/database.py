@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import time
 
 DATA_DIR = os.environ.get("AGENDA_DATA_DIR", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -36,6 +37,12 @@ def set_value(username: str, key: str, value: str) -> None:
             "INSERT OR REPLACE INTO storage (key, value) VALUES (?, ?)",
             (key, value),
         )
+        if not key.startswith('_'):
+            stamp = str(int(time.time() * 1000))
+            db.execute(
+                "INSERT OR REPLACE INTO storage (key, value) VALUES (?, ?)",
+                ('_stamp', stamp),
+            )
 
 
 def delete_value(username: str, key: str) -> None:

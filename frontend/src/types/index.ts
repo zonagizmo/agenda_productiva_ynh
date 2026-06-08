@@ -93,6 +93,18 @@ export interface RolloverEntry {
   movedAt: string
 }
 
+export interface DayTemplate {
+  id: string
+  name: string
+  createdAt: string
+  sections: {
+    objetivos: string[]
+    tareas: string[]
+    reuniones: string[]
+    plazos: string[]
+  }
+}
+
 export interface SectionDef {
   key: keyof Pick<DayData, 'objetivos' | 'tareas' | 'reuniones' | 'plazos'>
   label: string
