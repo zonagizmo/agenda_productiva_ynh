@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="10dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="4dp">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📅 Agenda"
+            android:textColor="#EEEEFF"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/widget_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#7777AA"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#3A3A6A"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Item slots (5 max) -->
+    <TextView android:id="@+id/widget_item0"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#EEEEFF" android:textSize="11sp"
+        android:maxLines="1" android:ellipsize="end"
+        android:visibility="gone" android:layout_marginBottom="2dp" />
+    <TextView android:id="@+id/widget_item1"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#EEEEFF" android:textSize="11sp"
+        android:maxLines="1" android:ellipsize="end"
+        android:visibility="gone" android:layout_marginBottom="2dp" />
+    <TextView android:id="@+id/widget_item2"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#EEEEFF" android:textSize="11sp"
+        android:maxLines="1" android:ellipsize="end"
+        android:visibility="gone" android:layout_marginBottom="2dp" />
+    <TextView android:id="@+id/widget_item3"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#EEEEFF" android:textSize="11sp"
+        android:maxLines="1" android:ellipsize="end"
+        android:visibility="gone" android:layout_marginBottom="2dp" />
+    <TextView android:id="@+id/widget_item4"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#EEEEFF" android:textSize="11sp"
+        android:maxLines="1" android:ellipsize="end"
+        android:visibility="gone" android:layout_marginBottom="2dp" />
+
+    <!-- More / empty -->
+    <TextView android:id="@+id/widget_more"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#7777AA" android:textSize="10sp"
+        android:visibility="gone" android:layout_marginBottom="2dp" />
+    <TextView android:id="@+id/widget_empty"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Abre la app para cargar datos"
+        android:textColor="#7777AA" android:textSize="10sp"
+        android:visibility="visible" />
+
+</LinearLayout>

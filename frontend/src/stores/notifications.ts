@@ -64,8 +64,36 @@ export const useNotifStore = defineStore('notif', () => {
       })
     } catch {}
 
-    // Cuando el usuario toca la notificación → navegar al día correcto
+    // Registrar tipo de acción: botón Posponer 15 min
+    try {
+      await LocalNotifications.registerActionTypes({
+        types: [{
+          id: 'AVISO_SNOOZE',
+          actions: [{ id: 'snooze_15', title: '⏰ +15 min' }],
+        }],
+      })
+    } catch {}
+
+    // Cuando el usuario toca o pospone la notificación
     LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+      if (action.actionId === 'snooze_15') {
+        const snoozeAt = new Date(Date.now() + 15 * 60 * 1000)
+        // ID único para el recordatorio pospuesto
+        const snoozeId = ((action.notification.id * 1237 + 7919) & 0x7FFFFFFF) || 1
+        LocalNotifications.schedule({
+          notifications: [{
+            id:           snoozeId,
+            title:        action.notification.title ?? '',
+            body:         action.notification.body ?? '',
+            schedule:     { at: snoozeAt, allowWhileIdle: true },
+            channelId:    CHANNEL_ID,
+            actionTypeId: 'AVISO_SNOOZE',
+            extra:        { ...(action.notification.extra as Record<string, unknown> ?? {}), snoozed: true },
+          }],
+        }).catch(() => {})
+        return
+      }
+      // Tap en la notificación → navegar al día correcto
       const extra = action.notification.extra as { dateKey?: string } | null
       if (extra?.dateKey) {
         const agenda = useAgendaStore()
@@ -115,12 +143,13 @@ export const useNotifStore = defineStore('notif', () => {
             if (dt <= now) continue
             const dot = T.priors.find(p => p.key === av.prioridad)?.dot ?? '🔔'
             toSchedule.push({
-              id:        hashId(av.id),
-              title:     `${dot} ${sec.icon} ${sec.label}`,
-              body:      av.texto + (item.texto ? `\n📌 ${item.texto}` : ''),
-              schedule:  { at: dt, allowWhileIdle: true },
-              channelId: CHANNEL_ID,
-              extra:     { avisoId: av.id, dateKey },
+              id:           hashId(av.id),
+              title:        `${dot} ${sec.icon} ${sec.label}`,
+              body:         av.texto + (item.texto ? `\n📌 ${item.texto}` : ''),
+              schedule:     { at: dt, allowWhileIdle: true },
+              channelId:    CHANNEL_ID,
+              actionTypeId: 'AVISO_SNOOZE',
+              extra:        { avisoId: av.id, dateKey },
             })
           }
         }
@@ -136,12 +165,13 @@ export const useNotifStore = defineStore('notif', () => {
         const dot   = T.priors.find(p => p.key === av.prioridad)?.dot ?? '🔔'
         const label = lang === 'es' ? 'Tarea' : 'Task'
         toSchedule.push({
-          id:        hashId(av.id),
-          title:     `${dot} 📋 ${label}`,
-          body:      av.texto + (task.texto ? ` · ${task.texto}` : ''),
-          schedule:  { at: dt, allowWhileIdle: true },
-          channelId: CHANNEL_ID,
-          extra:     { avisoId: av.id, dateKey: '' },
+          id:           hashId(av.id),
+          title:        `${dot} 📋 ${label}`,
+          body:         av.texto + (task.texto ? ` · ${task.texto}` : ''),
+          schedule:     { at: dt, allowWhileIdle: true },
+          channelId:    CHANNEL_ID,
+          actionTypeId: 'AVISO_SNOOZE',
+          extra:        { avisoId: av.id, dateKey: '' },
         })
       }
     }

@@ -16,8 +16,10 @@ import { useNotifStore }    from '@/stores/notifications'
 import { useTemplatesStore } from '@/stores/templates'
 import { LANG } from '@/i18n'
 import { api, apiMeta, initNativeApi } from '@/api/client'
+import { WidgetPlugin } from '@/plugins/WidgetPlugin'
 import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
+import { todayKey as _todayKey } from '@/composables/useDate'
 
 const ui     = useUiStore()
 const agenda = useAgendaStore()
@@ -41,12 +43,34 @@ async function checkSync() {
     const r = await api.storage.stamp()
     if (_lastStamp && r.stamp !== _lastStamp && Date.now() - apiMeta.lastSaveMs > 10_000) {
       await Promise.all([agenda.load(), tasks.load(), cfg.load(), tpls.load()])
+      updateWidget()
     }
     _lastStamp = r.stamp
   } catch { /* ignore */ }
 }
 
 function _onVisibility() { if (document.visibilityState === 'visible') checkSync() }
+
+async function updateWidget() {
+  if (!Capacitor.isNativePlatform()) return
+  const today = _todayKey()
+  const secs  = LANG[ui.lang].sections
+  const items: { icon: string; text: string; done: boolean }[] = []
+  const dayData = agenda.data[today]
+  if (dayData) {
+    for (const sec of secs) {
+      for (const item of dayData[sec.key] ?? []) {
+        if (item.texto.trim()) items.push({ icon: sec.icon, text: item.texto, done: !!item.done })
+      }
+    }
+  }
+  for (const t of tasks.tasksForDay(today)) {
+    items.push({ icon: '📋', text: t.texto, done: t.done })
+  }
+  try {
+    await WidgetPlugin.updateData({ data: JSON.stringify({ date: today, items }) })
+  } catch { /* plugin not available */ }
+}
 
 onUnmounted(() => {
   clearInterval(_tickInterval)
@@ -64,6 +88,8 @@ async function startApp() {
   tasks.checkAndResetRecurring()
   await notif.setupNative(ui.lang)
   _tickInterval = setInterval(() => { notif.check(ui.lang); tasks.checkAndResetRecurring(); notif.scheduleNative(ui.lang) }, 60_000)
+  // Widget data
+  updateWidget()
   // Real-time sync: poll every 30s + on tab focus
   await checkSync()
   _syncInterval = setInterval(checkSync, 30_000)
