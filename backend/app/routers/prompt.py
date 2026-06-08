@@ -29,16 +29,24 @@ class PromptBody(BaseModel):
     plazos: list[dict[str, Any]] = []
 
 
+def _fmt_dur(minutes: int) -> str:
+    if minutes < 60:
+        return f"{minutes}min"
+    h, m = divmod(minutes, 60)
+    return f"{h}h{m:02d}min" if m else f"{h}h"
+
+
 def _fmt(icon: str, label: str, items: list[dict]) -> str | None:
     filled = [x for x in items if x.get("texto", "").strip()]
     if not filled:
         return None
-    lines = "\n".join(
-        f"  {i + 1}. {x['texto']}"
-        + (f" [⚠️ {len(x['avisos'])} aviso(s)]" if x.get("avisos") else "")
-        for i, x in enumerate(filled)
-    )
-    return f"{icon} {label}:\n{lines}"
+    lines = []
+    for i, x in enumerate(filled):
+        dur = x.get("duracion")
+        dur_str = f" [⏱ {_fmt_dur(int(dur))}]" if dur else ""
+        av_str  = f" [⚠️ {len(x['avisos'])} aviso(s)]" if x.get("avisos") else ""
+        lines.append(f"  {i + 1}. {x['texto']}{dur_str}{av_str}")
+    return f"{icon} {label}:\n" + "\n".join(lines)
 
 
 @router.post("/build-prompt")
@@ -124,7 +132,7 @@ IMPORTANT: All items marked with 🔄 "Tasks due today" MUST appear as time bloc
 Generate in English, strictly respecting the work schedule:
 
 ## DAY PLAN WITH SCHEDULE
-Time blocks within {fi}–{ff}{f" (lunch {pi}–{pf})" if body.pausa_comida else ""}. Format "HH:MM — Activity".
+Time blocks within {fi}–{ff}{f" (lunch {pi}–{pf})" if body.pausa_comida else ""}. Format "HH:MM — Activity". Respect estimated durations marked with ⏱ when assigning time blocks.
 
 ## PRIORITIZED TASK LIST
 🔴 Urgent/Important, 🟡 Important, 🟢 Can wait.
@@ -145,7 +153,7 @@ IMPORTANTE: Todas las tareas marcadas con 🔄 "Tareas del día" DEBEN aparecer 
 Genera en español respetando estrictamente el horario:
 
 ## PLAN DEL DÍA CON HORARIOS
-Bloques dentro de {fi}–{ff}{f" (pausa {pi}–{pf})" if body.pausa_comida else ""}. Formato "HH:MM — Actividad".
+Bloques dentro de {fi}–{ff}{f" (pausa {pi}–{pf})" if body.pausa_comida else ""}. Formato "HH:MM — Actividad". Respeta las duraciones estimadas marcadas con ⏱ al asignar bloques de tiempo.
 
 ## LISTA PRIORIZADA DE TAREAS
 🔴 Urgente/Importante, 🟡 Importante, 🟢 Puede esperar.

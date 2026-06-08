@@ -61,6 +61,15 @@ interface Translations {
   tplSave: string; tplApply: string; tplName: string
   tplSaved: string; tplApplied: string; tplNoTemplates: string
   tplSaveBtn: string; tplCancelBtn: string; tplDelete: string; tplTitle: string
+  // Vista semanal
+  weekView: string; dayView: string
+  // Búsqueda global
+  searchBtn: string; searchPlaceholder: string; searchNoResults: string
+  searchInAgenda: string; searchInTasks: string
+  // Duración estimada
+  durLabel: string; durPlaceholder: string
+  // Compartir plan
+  shareBtn: string; shareCopied: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -135,6 +144,11 @@ export const LANG: Record<Lang, Translations> = {
     tplName: 'Nombre de la plantilla...', tplSaved: '✅ Plantilla guardada',
     tplApplied: '✅ Plantilla aplicada', tplNoTemplates: 'No hay plantillas guardadas.',
     tplSaveBtn: 'Guardar', tplCancelBtn: 'Cancelar', tplDelete: '✕', tplTitle: 'Plantillas guardadas',
+    weekView: '📆 Semana', dayView: '📅 Día',
+    searchBtn: '🔍', searchPlaceholder: 'Buscar en agenda y tareas...', searchNoResults: 'Sin resultados.',
+    searchInAgenda: 'Agenda', searchInTasks: 'Tareas',
+    durLabel: 'Duración estimada (min)', durPlaceholder: 'min',
+    shareBtn: '📤 Compartir', shareCopied: '✅ Copiado al portapapeles',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -194,5 +208,10 @@ export const LANG: Record<Lang, Translations> = {
     tplName: 'Template name...', tplSaved: '✅ Template saved',
     tplApplied: '✅ Template applied', tplNoTemplates: 'No saved templates.',
     tplSaveBtn: 'Save', tplCancelBtn: 'Cancel', tplDelete: '✕', tplTitle: 'Saved templates',
+    weekView: '📆 Week', dayView: '📅 Day',
+    searchBtn: '🔍', searchPlaceholder: 'Search agenda and tasks...', searchNoResults: 'No results.',
+    searchInAgenda: 'Agenda', searchInTasks: 'Tasks',
+    durLabel: 'Estimated duration (min)', durPlaceholder: 'min',
+    shareBtn: '📤 Share', shareCopied: '✅ Copied to clipboard',
   },
 }

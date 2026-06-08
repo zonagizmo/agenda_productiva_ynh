@@ -5,8 +5,9 @@ import TareasView    from '@/components/tasks/TareasView.vue'
 import HistorialView from '@/components/historial/HistorialView.vue'
 import StatsView     from '@/components/stats/StatsView.vue'
 import ConfigView    from '@/components/config/ConfigView.vue'
-import CapacitorSetup from '@/components/CapacitorSetup.vue'
-import NativeLogin    from '@/components/NativeLogin.vue'
+import CapacitorSetup  from '@/components/CapacitorSetup.vue'
+import NativeLogin     from '@/components/NativeLogin.vue'
+import SearchOverlay   from '@/components/SearchOverlay.vue'
 import { useUiStore }       from '@/stores/ui'
 import { useAgendaStore }   from '@/stores/agenda'
 import { useTasksStore }    from '@/stores/tasks'
@@ -29,6 +30,7 @@ const T      = computed(() => LANG[ui.lang])
 const showSetup   = ref(false)
 const showLogin   = ref(false)
 const appReady    = ref(false)
+const showSearch  = ref(false)
 
 let _tickInterval: ReturnType<typeof setInterval> | undefined
 let _syncInterval: ReturnType<typeof setInterval> | undefined
@@ -100,6 +102,7 @@ onMounted(async () => {
         <span class="topbar-title">{{ T.appTitle }}</span>
         <span v-if="ui.version" class="topbar-version">v{{ ui.version }}</span>
       </div>
+      <button class="search-topbar-btn" :title="T.searchBtn" @click="showSearch=true">🔍</button>
       <button class="notif-btn" :class="notif.perm"
         :title="notif.perm==='granted' ? T.notifStatusGranted : T.notifActivate"
         @click="notif.request()">
@@ -127,6 +130,8 @@ onMounted(async () => {
       <ConfigView    v-else-if="ui.tab==='config'" />
     </div>
   </div>
+
+  <SearchOverlay v-if="showSearch" @close="showSearch=false" />
 
   </template><!-- end v-else-if appReady -->
 </template>

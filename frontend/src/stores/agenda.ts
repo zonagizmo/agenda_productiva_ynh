@@ -142,5 +142,14 @@ export const useAgendaStore = defineStore('agenda', () => {
     return { count, targetDate, items }
   }
 
-  return { data, selDate, calCursor, day, rolloverLog, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday, addRolloverEntry }
+  function reorderItems(section: keyof Pick<DayData,'objetivos'|'tareas'|'reuniones'|'plazos'>, fromIdx: number, toIdx: number) {
+    const d = ensureDay()
+    const items = d[section]
+    if (fromIdx < 0 || toIdx < 0 || fromIdx >= items.length || toIdx >= items.length) return
+    const [moved] = items.splice(fromIdx, 1)
+    items.splice(toIdx, 0, moved)
+    save()
+  }
+
+  return { data, selDate, calCursor, day, rolloverLog, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday, addRolloverEntry, reorderItems }
 })

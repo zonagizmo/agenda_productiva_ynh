@@ -17,6 +17,7 @@ export interface AgendaItem {
   texto: string
   done?: boolean
   deferred?: boolean
+  duracion?: number   // minutos estimados, opcional
   avisos: Aviso[]
 }
 

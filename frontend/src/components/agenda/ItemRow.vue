@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import AvisoEditor from '@/components/shared/AvisoEditor.vue'
 import { useAgendaStore } from '@/stores/agenda'
 import { useUiStore } from '@/stores/ui'
@@ -13,8 +13,25 @@ const agenda = useAgendaStore()
 const ui     = useUiStore()
 const T      = () => LANG[ui.lang]
 const open   = ref(false)
+const editDur = ref(false)
+const durInput = ref<HTMLInputElement | null>(null)
+
+watch(editDur, v => { if (v) nextTick(() => durInput.value?.focus()) })
 
 const hasAvisos = () => props.item.avisos.length > 0
+
+function fmtDur(m: number): string {
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60), rm = m % 60
+  return rm ? `${h}h${rm}m` : `${h}h`
+}
+
+function saveDur(e: Event) {
+  const v = parseInt((e.target as HTMLInputElement).value)
+  props.item.duracion = (v > 0 && v <= 999) ? v : undefined
+  agenda.save()
+  editDur.value = false
+}
 
 function updateAviso(i: number, av: Aviso) {
   props.item.avisos[i] = av
@@ -49,6 +66,24 @@ function toggleBell() {
         @blur="($event.target as HTMLInputElement).style.borderColor = ''"
       />
       <span v-if="item.deferred" class="item-deferred-tag" title="Aplazado al día siguiente">↪</span>
+      <!-- Duration -->
+      <input
+        v-if="editDur"
+        ref="durInput"
+        class="dur-input"
+        type="number" min="1" max="999"
+        :value="item.duracion ?? ''"
+        :placeholder="T().durPlaceholder"
+        @blur="saveDur"
+        @keyup.enter="saveDur"
+        @keyup.escape="editDur=false"
+      />
+      <span v-else
+        class="item-dur"
+        :class="{ 'has-dur': item.duracion }"
+        :title="T().durLabel"
+        @click="editDur=true"
+      >{{ item.duracion ? fmtDur(item.duracion) : '⏱' }}</span>
       <button
         class="item-bell"
         :class="{ 'has-avisos': hasAvisos() }"

@@ -2,6 +2,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import SectionCard from './SectionCard.vue'
 import PlanCard from './PlanCard.vue'
+import WeekView from './WeekView.vue'
 import { useAgendaStore } from '@/stores/agenda'
 import { useTasksStore } from '@/stores/tasks'
 import { useConfigStore } from '@/stores/config'
@@ -26,6 +27,7 @@ const generating    = ref(false)
 const error         = ref('')
 const rolloverMsg   = ref('')
 const sectionsOpen  = ref(!agenda.day.plan)
+const viewMode      = ref<'day' | 'week'>('day')
 const showTplSave   = ref(false)
 const showTplApply  = ref(false)
 const tplName       = ref('')
@@ -294,12 +296,20 @@ function doRollover() {
             <div class="date-sub">{{ dayLabel }}</div>
           </div>
           <div class="day-nav">
+            <button class="day-nav-btn week-toggle" :class="{ active: viewMode==='week' }"
+              @click="viewMode = viewMode==='day'?'week':'day'">
+              {{ viewMode==='day' ? T.weekView : T.dayView }}
+            </button>
             <button class="day-nav-btn" @click="agenda.navigate(-1)">‹</button>
             <button class="day-nav-btn" @click="agenda.navigate(1)">›</button>
           </div>
         </div>
 
-        <!-- Templates -->
+        <!-- Week view -->
+        <WeekView v-if="viewMode==='week'" @navigate="viewMode='day'" />
+
+        <!-- Templates (only in day view) -->
+        <template v-if="viewMode==='day'">
         <div class="tpl-row">
           <button class="tpl-btn" @click="showTplSave=!showTplSave; showTplApply=false">{{ T.tplSave }}</button>
           <button class="tpl-btn" @click="showTplApply=!showTplApply; showTplSave=false">
@@ -359,6 +369,7 @@ function doRollover() {
           {{ T.rolloverBtn }}
         </button>
         <p v-if="rolloverMsg" class="rollover-msg">{{ rolloverMsg }}</p>
+        </template><!-- end viewMode==='day' -->
       </div>
     </div>
   </div>
