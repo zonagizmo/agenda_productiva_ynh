@@ -14,6 +14,7 @@ import { useTasksStore }    from '@/stores/tasks'
 import { useConfigStore }   from '@/stores/config'
 import { useNotifStore }    from '@/stores/notifications'
 import { useTemplatesStore } from '@/stores/templates'
+import { useOfflineStore }  from '@/stores/offline'
 import { LANG } from '@/i18n'
 import { api, apiMeta, initNativeApi } from '@/api/client'
 import { WidgetPlugin } from '@/plugins/WidgetPlugin'
@@ -21,13 +22,14 @@ import { Capacitor } from '@capacitor/core'
 import { Preferences } from '@capacitor/preferences'
 import { todayKey as _todayKey } from '@/composables/useDate'
 
-const ui     = useUiStore()
-const agenda = useAgendaStore()
-const tasks  = useTasksStore()
-const cfg    = useConfigStore()
-const notif  = useNotifStore()
-const tpls   = useTemplatesStore()
-const T      = computed(() => LANG[ui.lang])
+const ui      = useUiStore()
+const agenda  = useAgendaStore()
+const tasks   = useTasksStore()
+const cfg     = useConfigStore()
+const notif   = useNotifStore()
+const tpls    = useTemplatesStore()
+const offline = useOfflineStore()
+const T       = computed(() => LANG[ui.lang])
 
 const showSetup   = ref(false)
 const showLogin   = ref(false)
@@ -79,6 +81,7 @@ onUnmounted(() => {
 })
 
 async function startApp() {
+  offline.init()
   try { const v = await api.version(); ui.version = v.version ?? '' } catch { /* ignore */ }
   await Promise.all([agenda.load(), tasks.load(), cfg.load(), tpls.load()])
   if ('serviceWorker' in navigator && !Capacitor.isNativePlatform()) {
@@ -160,4 +163,9 @@ onMounted(async () => {
   <SearchOverlay v-if="showSearch" @close="showSearch=false" />
 
   </template><!-- end v-else-if appReady -->
+
+<div v-if="offline.syncing" class="offline-banner syncing">{{ T.offlineSyncing }}</div>
+<div v-else-if="!offline.isOnline" class="offline-banner">
+  {{ T.offlineBanner }}<span v-if="offline.pending"> · {{ offline.pending }} {{ T.offlinePending }}</span>
+</div>
 </template>

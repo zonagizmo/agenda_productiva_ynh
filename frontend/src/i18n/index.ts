@@ -70,6 +70,8 @@ interface Translations {
   durLabel: string; durPlaceholder: string
   // Compartir plan
   shareBtn: string; shareCopied: string
+  // Offline
+  offlineBanner: string; offlinePending: string; offlineSyncing: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -149,6 +151,7 @@ export const LANG: Record<Lang, Translations> = {
     searchInAgenda: 'Agenda', searchInTasks: 'Tareas',
     durLabel: 'Duración estimada (min)', durPlaceholder: 'min',
     shareBtn: '📤 Compartir', shareCopied: '✅ Copiado al portapapeles',
+    offlineBanner: '📵 Sin conexión', offlinePending: 'cambio(s) pendiente(s)', offlineSyncing: '⟳ Sincronizando...',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -213,5 +216,6 @@ export const LANG: Record<Lang, Translations> = {
     searchInAgenda: 'Agenda', searchInTasks: 'Tasks',
     durLabel: 'Estimated duration (min)', durPlaceholder: 'min',
     shareBtn: '📤 Share', shareCopied: '✅ Copied to clipboard',
+    offlineBanner: '📵 Offline', offlinePending: 'pending change(s)', offlineSyncing: '⟳ Syncing...',
   },
 }

@@ -1,5 +1,6 @@
 import type { Providers } from '@/types'
 import { Capacitor } from '@capacitor/core'
+import { idbGet, idbSet, idbEnqueue } from '@/api/idb'
 
 export class AuthError extends Error { name = 'AuthError' }
 
@@ -36,8 +37,32 @@ export const apiMeta = { lastSaveMs: 0 }
 
 export const api = {
   storage: {
-    get:    (key: string)               => request<{ value: string | null }>(`/storage/${key}`),
-    set:    (key: string, val: unknown) => { apiMeta.lastSaveMs = Date.now(); return request<{ ok: boolean }>(`/storage/${key}`, { method: 'POST', body: JSON.stringify({ value: JSON.stringify(val) }) }) },
+    get: async (key: string): Promise<{ value: string | null }> => {
+      try {
+        const res = await request<{ value: string | null }>(`/storage/${key}`)
+        if (res.value !== null) idbSet(key, res.value)
+        return res
+      } catch (e) {
+        if (e instanceof AuthError) throw e
+        const cached = await idbGet(key)
+        return { value: cached }
+      }
+    },
+    set: async (key: string, val: unknown): Promise<{ ok: boolean }> => {
+      apiMeta.lastSaveMs = Date.now()
+      const serialized = JSON.stringify(val)
+      idbSet(key, serialized)
+      try {
+        return await request<{ ok: boolean }>(`/storage/${key}`, { method: 'POST', body: JSON.stringify({ value: serialized }) })
+      } catch (e) {
+        if (e instanceof AuthError) throw e
+        await idbEnqueue(key, serialized)
+        return { ok: false }
+      }
+    },
+    // Sync-only: sends directly without offline fallback (used by offline store queue flush)
+    rawSet: (key: string, serialized: string) =>
+      request<{ ok: boolean }>(`/storage/${key}`, { method: 'POST', body: JSON.stringify({ value: serialized }) }),
     delete: (key: string)               => request<{ ok: boolean }>(`/storage/${key}`, { method: 'DELETE' }),
     stamp:  ()                          => request<{ stamp: string }>('/storage/stamp'),
   },

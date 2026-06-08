@@ -1,8 +1,12 @@
-// Service Worker — requerido para que el navegador ofrezca instalar la PWA
-// Estrategia: network-first para HTML (siempre fresco), cache-first para assets hasheados (Vite)
-const CACHE = 'agenda-productiva-v2';
+// Service Worker — offline support + PWA
+// Estrategia: network-first para HTML, cache-first para assets hasheados (Vite)
+const CACHE = 'agenda-productiva-v3';
+const SHELL = ['./index.html'];
 
 self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(SHELL))
+  );
   self.skipWaiting();
 });
 
@@ -17,7 +21,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
 
-  // API: siempre red
+  // API: siempre red (el cliente maneja el fallback a IndexedDB)
   if (e.request.url.includes('/api/')) {
     e.respondWith(fetch(e.request));
     return;
@@ -25,7 +29,7 @@ self.addEventListener('fetch', e => {
 
   const url = new URL(e.request.url);
 
-  // Assets con hash de Vite (/assets/): cache-first (el hash garantiza frescura)
+  // Assets con hash de Vite (/assets/): cache-first
   if (url.pathname.includes('/assets/')) {
     e.respondWith(
       caches.match(e.request).then(cached => {

@@ -20,7 +20,7 @@ export const useConfigStore = defineStore('config', () => {
   async function load() {
     const cfg = await api.storage.get('config-v1')
     if (cfg.value) config.value = { ...defaultConfig(), ...JSON.parse(cfg.value) as Partial<AppConfig> }
-    providers.value = await api.providers()
+    try { providers.value = await api.providers() } catch { /* offline */ }
   }
 
   async function save() { await api.storage.set('config-v1', config.value) }
