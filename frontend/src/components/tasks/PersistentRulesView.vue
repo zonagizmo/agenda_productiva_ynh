@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useConfigStore } from '@/stores/config'
-import { usePersistentRulesStore } from '@/stores/persistentRules'
+import { usePersistentRulesStore, calcFirstTrigger } from '@/stores/persistentRules'
 import { LANG } from '@/i18n'
 import { api } from '@/api/client'
 import { callAiDirect } from '@/composables/useAiCall'
@@ -57,7 +57,7 @@ async function confirm() {
     naturalText: text.value.trim(),
     taskText: preview.value.taskText,
     recurrenceDesc: preview.value.recurrenceDesc,
-    nextTrigger: preview.value.nextTrigger,
+    nextTrigger: calcFirstTrigger(preview.value.schedule),
     lastTriggered: '',
     createdAt: new Date().toISOString(),
     schedule: preview.value.schedule,

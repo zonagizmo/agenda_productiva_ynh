@@ -43,6 +43,42 @@ function calcNextTrigger(schedule: RuleSchedule, from: string): string {
   return d.toISOString().slice(0, 10)
 }
 
+export function calcFirstTrigger(schedule: RuleSchedule): string {
+  const today = todayKey()
+  const d = new Date(today + 'T12:00:00')
+  const n = schedule.interval || 1
+
+  switch (schedule.type) {
+    case 'monthly': {
+      d.setDate(1)
+      d.setMonth(d.getMonth() - n)
+      const target = schedule.dayOfMonth ?? 1
+      const max = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+      d.setDate(Math.min(target, max))
+      break
+    }
+    case 'weekly':
+      d.setDate(d.getDate() - 7 * n)
+      break
+    case 'yearly': {
+      d.setFullYear(d.getFullYear() - n)
+      if (schedule.month) d.setMonth(schedule.month - 1)
+      const target = schedule.dayOfMonth ?? 1
+      const max = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+      d.setDate(Math.min(target, max))
+      break
+    }
+    case 'daily':
+      d.setDate(d.getDate() - n)
+      break
+  }
+
+  const from = d.toISOString().slice(0, 10)
+  let candidate = calcNextTrigger(schedule, from)
+  if (candidate < today) candidate = calcNextTrigger(schedule, candidate)
+  return candidate
+}
+
 export const usePersistentRulesStore = defineStore('persistentRules', () => {
   const rules = ref<PersistentRule[]>([])
 
