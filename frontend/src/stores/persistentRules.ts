@@ -96,6 +96,15 @@ export const usePersistentRulesStore = defineStore('persistentRules', () => {
         rule.nextTrigger = current
         rulesChanged = true
       }
+
+      // Pre-create the upcoming task so it's visible before the day arrives
+      const alreadyNext = agenda.data[current]?.tareas?.some(item => item.ruleId === rule.id)
+      if (!alreadyNext) {
+        agenda.addRuleTask(current, {
+          id: uid(), texto: rule.taskText, done: false, avisos: [], ruleId: rule.id,
+        })
+        agendaChanged = true
+      }
     }
 
     if (agendaChanged) await agenda.save()
