@@ -17,8 +17,9 @@ export interface AgendaItem {
   texto: string
   done?: boolean
   deferred?: boolean
-  duracion?: number   // minutos estimados, opcional
+  duracion?: number
   avisos: Aviso[]
+  ruleId?: string     // links to a PersistentRule if auto-created
 }
 
 export interface DayData {
@@ -104,6 +105,25 @@ export interface DayTemplate {
     reuniones: string[]
     plazos: string[]
   }
+}
+
+export interface RuleSchedule {
+  type: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  interval: number
+  dayOfMonth?: number   // 1-31
+  dayOfWeek?: number    // 0-6 (0=Sunday)
+  month?: number        // 1-12
+}
+
+export interface PersistentRule {
+  id: string
+  naturalText: string
+  taskText: string
+  recurrenceDesc: string
+  nextTrigger: string   // YYYY-MM-DD — next unprocessed date
+  lastTriggered: string // YYYY-MM-DD or ''
+  createdAt: string
+  schedule: RuleSchedule
 }
 
 export interface SectionDef {

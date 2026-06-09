@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import TaskRow from './TaskRow.vue'
+import PersistentRulesView from './PersistentRulesView.vue'
 import { useTasksStore, LABEL_COLORS } from '@/stores/tasks'
 import { useUiStore } from '@/stores/ui'
 import { LANG } from '@/i18n'
@@ -72,6 +73,9 @@ function addLabel() {
         <TaskRow v-if="showDone" v-for="t in done" :key="t.id" :task="t" @remove="store.removeTask(t.id)" />
       </div>
     </template>
+
+    <!-- Persistent rules -->
+    <PersistentRulesView />
 
     <!-- Labels manager -->
     <div class="labels-manager">

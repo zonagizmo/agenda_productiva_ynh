@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from .routers import storage, providers, prompt, backup as backup_router, caldav_sync
+from .routers import storage, providers, prompt, backup as backup_router, caldav_sync, rules as rules_router
 from .backup import run_backup
 from .version import get_version_info
 
@@ -55,6 +55,7 @@ app.include_router(providers.router)
 app.include_router(prompt.router)
 app.include_router(backup_router.router)
 app.include_router(caldav_sync.router)
+app.include_router(rules_router.router)
 
 
 @app.get("/api/version")

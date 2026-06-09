@@ -72,6 +72,11 @@ interface Translations {
   shareBtn: string; shareCopied: string
   // Offline
   offlineBanner: string; offlinePending: string; offlineSyncing: string
+  // Reglas persistentes
+  rulesTitle: string; rulesInputPH: string; rulesAnalyze: string; rulesAnalyzing: string
+  rulesTask: string; rulesSchedule: string; rulesNext: string
+  rulesConfirm: string; rulesCancel: string
+  rulesEmpty: string; rulesNoConfig: string; rulesErrParse: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -152,6 +157,10 @@ export const LANG: Record<Lang, Translations> = {
     durLabel: 'Duración estimada (min)', durPlaceholder: 'min',
     shareBtn: '📤 Compartir', shareCopied: '✅ Copiado al portapapeles',
     offlineBanner: '📵 Sin conexión', offlinePending: 'cambio(s) pendiente(s)', offlineSyncing: '⟳ Sincronizando...',
+    rulesTitle: '🤖 Tareas automáticas por IA', rulesInputPH: 'Ej: avísame todos los lunes de hacer ejercicio...', rulesAnalyze: '🔍 Analizar', rulesAnalyzing: 'Analizando...',
+    rulesTask: 'Tarea a crear', rulesSchedule: 'Cuándo', rulesNext: 'Próxima vez',
+    rulesConfirm: '✅ Confirmar', rulesCancel: 'Cancelar',
+    rulesEmpty: 'Sin reglas activas.', rulesNoConfig: 'Configura la IA en ⚙️ Config primero.', rulesErrParse: 'La IA no devolvió un JSON válido. Intenta de nuevo.',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -217,5 +226,9 @@ export const LANG: Record<Lang, Translations> = {
     durLabel: 'Estimated duration (min)', durPlaceholder: 'min',
     shareBtn: '📤 Share', shareCopied: '✅ Copied to clipboard',
     offlineBanner: '📵 Offline', offlinePending: 'pending change(s)', offlineSyncing: '⟳ Syncing...',
+    rulesTitle: '🤖 AI Automatic Tasks', rulesInputPH: 'e.g. remind me every Monday to exercise...', rulesAnalyze: '🔍 Analyze', rulesAnalyzing: 'Analyzing...',
+    rulesTask: 'Task to create', rulesSchedule: 'Schedule', rulesNext: 'Next time',
+    rulesConfirm: '✅ Confirm', rulesCancel: 'Cancel',
+    rulesEmpty: 'No active rules.', rulesNoConfig: 'Set up AI in ⚙️ Config first.', rulesErrParse: 'AI did not return valid JSON. Try again.',
   },
 }

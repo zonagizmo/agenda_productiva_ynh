@@ -15,6 +15,7 @@ import { useConfigStore }   from '@/stores/config'
 import { useNotifStore }    from '@/stores/notifications'
 import { useTemplatesStore } from '@/stores/templates'
 import { useOfflineStore }  from '@/stores/offline'
+import { usePersistentRulesStore } from '@/stores/persistentRules'
 import { LANG } from '@/i18n'
 import { api, apiMeta, initNativeApi } from '@/api/client'
 import { WidgetPlugin } from '@/plugins/WidgetPlugin'
@@ -29,6 +30,7 @@ const cfg     = useConfigStore()
 const notif   = useNotifStore()
 const tpls    = useTemplatesStore()
 const offline = useOfflineStore()
+const prules  = usePersistentRulesStore()
 const T       = computed(() => LANG[ui.lang])
 
 const showSetup   = ref(false)
@@ -83,7 +85,8 @@ onUnmounted(() => {
 async function startApp() {
   offline.init()
   try { const v = await api.version(); ui.version = v.version ?? '' } catch { /* ignore */ }
-  await Promise.all([agenda.load(), tasks.load(), cfg.load(), tpls.load()])
+  await Promise.all([agenda.load(), tasks.load(), cfg.load(), tpls.load(), prules.load()])
+  await prules.checkAndFire()
   if ('serviceWorker' in navigator && !Capacitor.isNativePlatform()) {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* ignore */ })
   }

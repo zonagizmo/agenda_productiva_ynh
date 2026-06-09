@@ -67,7 +67,8 @@ export const api = {
     stamp:  ()                          => request<{ stamp: string }>('/storage/stamp'),
   },
   providers:   ()              => request<Providers>('/providers'),
-  buildPrompt: (body: unknown) => request<{ prompt?: string; error?: string }>('/build-prompt', { method: 'POST', body: JSON.stringify(body) }),
+  buildPrompt:     (body: unknown) => request<{ prompt?: string; error?: string }>('/build-prompt',     { method: 'POST', body: JSON.stringify(body) }),
+  buildRulePrompt: (body: unknown) => request<{ prompt: string }>('/build-rule-prompt', { method: 'POST', body: JSON.stringify(body) }),
   version:     ()              => request<{ version: string; label: string }>('/version'),
   backup: {
     status: ()  => request<{ last_backup: string | null; file_count: number }>('/backup/status'),

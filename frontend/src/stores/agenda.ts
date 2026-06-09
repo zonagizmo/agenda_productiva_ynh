@@ -142,6 +142,11 @@ export const useAgendaStore = defineStore('agenda', () => {
     return { count, targetDate, items }
   }
 
+  function addRuleTask(dateKey: string, item: AgendaItem) {
+    if (!data.value[dateKey]) data.value[dateKey] = emptyDay()
+    data.value[dateKey].tareas.push(item)
+  }
+
   function reorderItems(section: keyof Pick<DayData,'objetivos'|'tareas'|'reuniones'|'plazos'>, fromIdx: number, toIdx: number) {
     const d = ensureDay()
     const items = d[section]
@@ -151,5 +156,5 @@ export const useAgendaStore = defineStore('agenda', () => {
     save()
   }
 
-  return { data, selDate, calCursor, day, rolloverLog, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday, addRolloverEntry, reorderItems }
+  return { data, selDate, calCursor, day, rolloverLog, load, save, addItem, removeItem, setPlan, navigate, hasPlan, hasData, ensureDay, newAviso, newItem, toggleItemDone, rolloverToNextWorkday, addRolloverEntry, reorderItems, addRuleTask }
 })
