@@ -133,13 +133,17 @@ export const usePersistentRulesStore = defineStore('persistentRules', () => {
         rulesChanged = true
       }
 
-      // Pre-create the upcoming task so it's visible before the day arrives
-      const alreadyNext = agenda.data[current]?.tareas?.some(item => item.ruleId === rule.id)
-      if (!alreadyNext) {
-        agenda.addRuleTask(current, {
-          id: uid(), texto: rule.taskText, done: false, avisos: [], ruleId: rule.id,
-        })
-        agendaChanged = true
+      // Pre-create the next 12 upcoming occurrences so they're visible in the calendar
+      let upcoming = current
+      for (let i = 0; i < 12; i++) {
+        const alreadyNext = agenda.data[upcoming]?.tareas?.some(item => item.ruleId === rule.id)
+        if (!alreadyNext) {
+          agenda.addRuleTask(upcoming, {
+            id: uid(), texto: rule.taskText, done: false, avisos: [], ruleId: rule.id,
+          })
+          agendaChanged = true
+        }
+        upcoming = calcNextTrigger(rule.schedule, upcoming)
       }
     }
 
