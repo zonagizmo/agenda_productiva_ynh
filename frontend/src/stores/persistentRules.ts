@@ -5,6 +5,12 @@ import { uid, todayKey } from '@/composables/useDate'
 import { useAgendaStore } from './agenda'
 import type { PersistentRule, RuleSchedule } from '@/types'
 
+function toNextWorkingDay(d: Date): void {
+  const dow = d.getDay()
+  if (dow === 0) d.setDate(d.getDate() + 1)  // domingo → lunes
+  if (dow === 6) d.setDate(d.getDate() + 2)  // sábado → lunes
+}
+
 function calcNextTrigger(schedule: RuleSchedule, from: string): string {
   const d = new Date(from + 'T12:00:00')
   const n = schedule.interval || 1
@@ -33,6 +39,7 @@ function calcNextTrigger(schedule: RuleSchedule, from: string): string {
       break
     }
   }
+  if (schedule.workingDay) toNextWorkingDay(d)
   return d.toISOString().slice(0, 10)
 }
 

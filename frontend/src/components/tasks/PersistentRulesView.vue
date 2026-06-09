@@ -102,6 +102,9 @@ function fmtDate(d: string) {
         </button>
       </div>
 
+      <!-- Info -->
+      <p v-if="!preview" class="prules-info">{{ T.rulesInfo }}</p>
+
       <!-- Error -->
       <p v-if="error" class="prules-error">{{ error }}</p>
 

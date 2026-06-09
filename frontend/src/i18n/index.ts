@@ -76,7 +76,7 @@ interface Translations {
   rulesTitle: string; rulesInputPH: string; rulesAnalyze: string; rulesAnalyzing: string
   rulesTask: string; rulesSchedule: string; rulesNext: string
   rulesConfirm: string; rulesCancel: string
-  rulesEmpty: string; rulesNoConfig: string; rulesErrParse: string
+  rulesEmpty: string; rulesNoConfig: string; rulesErrParse: string; rulesInfo: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -161,6 +161,7 @@ export const LANG: Record<Lang, Translations> = {
     rulesTask: 'Tarea a crear', rulesSchedule: 'Cuándo', rulesNext: 'Próxima vez',
     rulesConfirm: '✅ Confirmar', rulesCancel: 'Cancelar',
     rulesEmpty: 'Sin reglas activas.', rulesNoConfig: 'Configura la IA en ⚙️ Config primero.', rulesErrParse: 'La IA no devolvió un JSON válido. Intenta de nuevo.',
+    rulesInfo: 'Las tareas aparecerán en la sección Tareas de la Agenda el día programado.',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -230,5 +231,6 @@ export const LANG: Record<Lang, Translations> = {
     rulesTask: 'Task to create', rulesSchedule: 'Schedule', rulesNext: 'Next time',
     rulesConfirm: '✅ Confirm', rulesCancel: 'Cancel',
     rulesEmpty: 'No active rules.', rulesNoConfig: 'Set up AI in ⚙️ Config first.', rulesErrParse: 'AI did not return valid JSON. Try again.',
+    rulesInfo: 'Tasks will appear in the Agenda Tasks section on the scheduled day.',
   },
 }

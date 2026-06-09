@@ -24,11 +24,12 @@ User input: "{body.text}"
 Return exactly this JSON structure (fill in the values):
 {{
   "taskText": "brief task description in English",
-  "recurrenceDesc": "human-readable schedule in English (e.g. 'On the 1st of every month')",
+  "recurrenceDesc": "human-readable schedule in English (e.g. 'First working day of every month')",
   "schedule": {{
     "type": "monthly",
     "interval": 1,
-    "dayOfMonth": 1
+    "dayOfMonth": 1,
+    "workingDay": false
   }},
   "nextTrigger": "YYYY-MM-DD"
 }}
@@ -39,7 +40,8 @@ Rules:
 - schedule.dayOfMonth: 1-31, only for "monthly" or "yearly"
 - schedule.dayOfWeek: 0-6 (0=Sunday), only for "weekly"
 - schedule.month: 1-12, only for "yearly"
-- nextTrigger: first date >= today when this rule fires (may be today)
+- schedule.workingDay: true if the user mentions "working day", "business day", "weekday", or similar. When true, the trigger date is automatically shifted to Monday if it falls on Saturday or Sunday.
+- nextTrigger: first date >= today when this rule fires. If workingDay is true, the nextTrigger must already be a Monday-Friday date.
 
 Return ONLY the JSON object, nothing else."""
     else:
@@ -51,11 +53,12 @@ Entrada del usuario: "{body.text}"
 Devuelve exactamente esta estructura JSON (rellena los valores):
 {{
   "taskText": "descripción breve de la tarea en español",
-  "recurrenceDesc": "descripción legible de la frecuencia en español (ej. 'El día 1 de cada mes')",
+  "recurrenceDesc": "descripción legible de la frecuencia en español (ej. 'Primer día laborable de cada mes')",
   "schedule": {{
     "type": "monthly",
     "interval": 1,
-    "dayOfMonth": 1
+    "dayOfMonth": 1,
+    "workingDay": false
   }},
   "nextTrigger": "YYYY-MM-DD"
 }}
@@ -66,7 +69,8 @@ Reglas:
 - schedule.dayOfMonth: 1-31, solo para "monthly" o "yearly"
 - schedule.dayOfWeek: 0-6 (0=Domingo), solo para "weekly"
 - schedule.month: 1-12, solo para "yearly"
-- nextTrigger: primera fecha >= hoy cuando se dispara esta regla (puede ser hoy)
+- schedule.workingDay: true si el usuario menciona "día laborable", "día hábil", "entre semana" o similar. Cuando es true, la fecha de disparo se desplaza automáticamente al lunes siguiente si cae en sábado o domingo.
+- nextTrigger: primera fecha >= hoy cuando se dispara esta regla. Si workingDay es true, el nextTrigger ya debe ser un día de lunes a viernes.
 
 Devuelve ÚNICAMENTE el objeto JSON, nada más."""
 

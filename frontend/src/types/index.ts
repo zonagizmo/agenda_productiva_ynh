@@ -113,6 +113,7 @@ export interface RuleSchedule {
   dayOfMonth?: number   // 1-31
   dayOfWeek?: number    // 0-6 (0=Sunday)
   month?: number        // 1-12
+  workingDay?: boolean  // true = advance to Monday if target falls on weekend
 }
 
 export interface PersistentRule {
