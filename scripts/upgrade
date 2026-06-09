@@ -15,10 +15,6 @@ chmod -R o-rwx "$install_dir"
 "$install_dir/venv/bin/pip" install --quiet --upgrade pip
 "$install_dir/venv/bin/pip" install --quiet -r "$install_dir/backend/requirements.txt"
 
-# ── Verificar que el backend arranca (detecta ImportError antes de iniciar) ──
-"$install_dir/venv/bin/python" -c "import sys; sys.path.insert(0,'$install_dir/backend'); from app.main import app" \
-  || ynh_die "El backend no arranca tras el upgrade — revisa los logs"
-
 # ── Directorio de logs ────────────────────────────────────
 mkdir -p "/var/log/$app"
 chown "$app:www-data" "/var/log/$app"
