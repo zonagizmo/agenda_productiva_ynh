@@ -19,6 +19,8 @@ const text     = ref('')
 const loading  = ref(false)
 const error    = ref('')
 const preview  = ref<{ taskText: string; recurrenceDesc: string; nextTrigger: string; schedule: RuleSchedule; section: AgendaSection } | null>(null)
+const toast    = ref('')
+let   toastTimer: ReturnType<typeof setTimeout> | null = null
 
 function sectionIcon(key: AgendaSection): string {
   return T.value.sections.find(s => s.key === key)?.icon ?? '✅'
@@ -76,6 +78,10 @@ async function confirm() {
   }
   await store.addRule(rule)
   await store.checkAndFire()
+  const prefix = T.value.rulesCreatedLabels[rule.section] ?? T.value.rulesCreatedLabels['tareas']
+  if (toastTimer) clearTimeout(toastTimer)
+  toast.value = `✅ ${prefix} «${rule.taskText}»`
+  toastTimer = setTimeout(() => { toast.value = '' }, 3500)
   text.value = ''
   preview.value = null
   error.value = ''
@@ -147,6 +153,11 @@ function fmtDate(d: string) {
         </div>
       </div>
       <p v-else class="prules-empty">{{ T.rulesEmpty }}</p>
+
+      <!-- Toast -->
+      <transition name="prules-toast-fade">
+        <p v-if="toast" class="prules-toast">{{ toast }}</p>
+      </transition>
     </div>
   </div>
 </template>

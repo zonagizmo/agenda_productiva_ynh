@@ -78,6 +78,7 @@ interface Translations {
   rulesConfirm: string; rulesCancel: string
   rulesEmpty: string; rulesNoConfig: string; rulesErrParse: string; rulesInfo: string
   rulesOnce: string; rulesRecurring: string; rulesSection: string
+  rulesCreatedLabels: Record<string, string>
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -164,6 +165,7 @@ export const LANG: Record<Lang, Translations> = {
     rulesEmpty: 'Sin reglas activas.', rulesNoConfig: 'Configura la IA en ⚙️ Config primero.', rulesErrParse: 'La IA no devolvió un JSON válido. Intenta de nuevo.',
     rulesInfo: 'La IA detecta automáticamente si es un objetivo, tarea, reunión o plazo.',
     rulesOnce: 'Tarea puntual (un solo disparo)', rulesRecurring: 'Tarea periódica', rulesSection: 'Sección',
+    rulesCreatedLabels: { objetivos: 'Se ha creado el objetivo', tareas: 'Se ha creado la tarea', reuniones: 'Se ha creado la reunión', plazos: 'Se ha creado el plazo' },
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -235,5 +237,6 @@ export const LANG: Record<Lang, Translations> = {
     rulesEmpty: 'No active rules.', rulesNoConfig: 'Set up AI in ⚙️ Config first.', rulesErrParse: 'AI did not return valid JSON. Try again.',
     rulesInfo: 'AI automatically detects whether it is a goal, task, meeting or deadline.',
     rulesOnce: 'One-time task (single trigger)', rulesRecurring: 'Recurring task', rulesSection: 'Section',
+    rulesCreatedLabels: { objetivos: 'Goal created', tareas: 'Task created', reuniones: 'Meeting created', plazos: 'Deadline created' },
   },
 }

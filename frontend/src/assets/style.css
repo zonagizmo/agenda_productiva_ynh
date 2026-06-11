@@ -818,3 +818,6 @@ input[type=date], input[type=time] { color-scheme: dark; }
 .prules-del-btn { background:none; border:none; color:var(--muted); font-size:.8rem; cursor:pointer; flex-shrink:0; }
 .prules-del-btn:hover { color:#ff6b6b; }
 .prules-empty { color:var(--muted); font-size:.8rem; text-align:center; padding:.4rem 0; }
+.prules-toast { background:var(--accent); color:#fff; font-size:.82rem; border-radius:6px; padding:.45rem .75rem; margin-top:.6rem; text-align:center; }
+.prules-toast-fade-enter-active, .prules-toast-fade-leave-active { transition: opacity .4s ease; }
+.prules-toast-fade-enter-from, .prules-toast-fade-leave-to { opacity: 0; }
