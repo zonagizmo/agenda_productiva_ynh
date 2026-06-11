@@ -217,7 +217,7 @@ function doRollover() {
             </div>
             <div class="cal-legend">{{ T.calLegend }}</div>
           </div>
-          <button class="goto-today" @click="agenda.selDate=todayKey()">{{ T.goToday }}</button>
+          <button class="goto-today" @click="()=>{ const t=new Date(); agenda.calCursor.y=t.getFullYear(); agenda.calCursor.m=t.getMonth(); agenda.selDate=todayKey() }">{{ T.goToday }}</button>
 
           <!-- Tareas del día seleccionado -->
           <div v-if="allDayItems.length" class="day-tasks-panel">
