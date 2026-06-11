@@ -108,7 +108,7 @@ export interface DayTemplate {
 }
 
 export interface RuleSchedule {
-  type: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  type: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'once'
   interval: number
   dayOfMonth?: number   // 1-31
   dayOfWeek?: number    // 0-6 (0=Sunday)

@@ -35,8 +35,8 @@ Return exactly this JSON structure (fill in the values):
 }}
 
 Rules:
-- schedule.type: one of "daily", "weekly", "monthly", "yearly"
-- schedule.interval: time BETWEEN occurrences (e.g. "every 2 months" → 2). NEVER use it for counts like "next 12 months" — the rule always repeats indefinitely.
+- schedule.type: one of "daily", "weekly", "monthly", "yearly", "once". Use "once" when the user mentions a specific date or one-time event (e.g. "remind me on July 15th", "notify me next Monday"). Use recurring types only when there is a clear repeating pattern.
+- schedule.interval: time BETWEEN occurrences (e.g. "every 2 months" → 2). NEVER use it for counts like "next 12 months" — the rule always repeats indefinitely. For "once", set interval to 1.
 - schedule.dayOfMonth: 1-31, only for "monthly" or "yearly". "first" or "1st" → 1; "last" → 28; "15th" → 15. IMPORTANT: do NOT derive this number from duration phrases like "next 12 months".
 - schedule.dayOfWeek: 0-6 (0=Sunday), only for "weekly"
 - schedule.month: 1-12, only for "yearly"
@@ -65,8 +65,8 @@ Devuelve exactamente esta estructura JSON (rellena los valores):
 }}
 
 Reglas:
-- schedule.type: uno de "daily", "weekly", "monthly", "yearly"
-- schedule.interval: tiempo ENTRE ocurrencias (ej. "cada 2 meses" → 2). NUNCA uses este campo para contar ocurrencias como "próximos 12 meses" — la regla se repite indefinidamente.
+- schedule.type: uno de "daily", "weekly", "monthly", "yearly", "once". Usa "once" cuando el usuario mencione una fecha concreta o un evento puntual (ej. "avísame el 15 de julio", "recuérdame el próximo lunes"). Usa los tipos periódicos solo cuando haya un patrón de repetición claro.
+- schedule.interval: tiempo ENTRE ocurrencias (ej. "cada 2 meses" → 2). NUNCA uses este campo para contar ocurrencias como "próximos 12 meses" — la regla se repite indefinidamente. Para "once", pon interval a 1.
 - schedule.dayOfMonth: 1-31, solo para "monthly" o "yearly". "primer día" o "primero" → 1; "último día" → 28; "día 15" o "quince" → 15. IMPORTANTE: NO derives este número de frases de duración como "próximos 12 meses".
 - schedule.dayOfWeek: 0-6 (0=Domingo), solo para "weekly"
 - schedule.month: 1-12, solo para "yearly"

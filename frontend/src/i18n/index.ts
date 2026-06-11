@@ -77,6 +77,7 @@ interface Translations {
   rulesTask: string; rulesSchedule: string; rulesNext: string
   rulesConfirm: string; rulesCancel: string
   rulesEmpty: string; rulesNoConfig: string; rulesErrParse: string; rulesInfo: string
+  rulesOnce: string; rulesRecurring: string
 }
 
 const SECTIONS_ES: SectionDef[] = [
@@ -162,6 +163,7 @@ export const LANG: Record<Lang, Translations> = {
     rulesConfirm: '✅ Confirmar', rulesCancel: 'Cancelar',
     rulesEmpty: 'Sin reglas activas.', rulesNoConfig: 'Configura la IA en ⚙️ Config primero.', rulesErrParse: 'La IA no devolvió un JSON válido. Intenta de nuevo.',
     rulesInfo: 'Las tareas aparecerán en la sección Tareas de la Agenda el día programado.',
+    rulesOnce: 'Tarea puntual (un solo disparo)', rulesRecurring: 'Tarea periódica',
   },
   en: {
     appTitle: 'Productive Agenda',
@@ -232,5 +234,6 @@ export const LANG: Record<Lang, Translations> = {
     rulesConfirm: '✅ Confirm', rulesCancel: 'Cancel',
     rulesEmpty: 'No active rules.', rulesNoConfig: 'Set up AI in ⚙️ Config first.', rulesErrParse: 'AI did not return valid JSON. Try again.',
     rulesInfo: 'Tasks will appear in the Agenda Tasks section on the scheduled day.',
+    rulesOnce: 'One-time task (single trigger)', rulesRecurring: 'Recurring task',
   },
 }

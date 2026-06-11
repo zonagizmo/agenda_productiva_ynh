@@ -12,6 +12,7 @@ function toNextWorkingDay(d: Date): void {
 }
 
 function calcNextTrigger(schedule: RuleSchedule, from: string): string {
+  if (schedule.type === 'once') return '9999-12-31'
   const d = new Date(from + 'T12:00:00')
   const n = schedule.interval || 1
   switch (schedule.type) {
@@ -43,7 +44,8 @@ function calcNextTrigger(schedule: RuleSchedule, from: string): string {
   return d.toISOString().slice(0, 10)
 }
 
-export function calcFirstTrigger(schedule: RuleSchedule): string {
+export function calcFirstTrigger(schedule: RuleSchedule, aiDate = ''): string {
+  if (schedule.type === 'once') return aiDate  // confiar en la fecha que da la IA
   const today = todayKey()
   const d = new Date(today + 'T12:00:00')
   const n = schedule.interval || 1
@@ -106,8 +108,35 @@ export const usePersistentRulesStore = defineStore('persistentRules', () => {
     const agenda = useAgendaStore()
     let agendaChanged = false
     let rulesChanged  = false
+    const toRemove: string[] = []
 
     for (const rule of rules.value) {
+
+      // ── Regla de un solo disparo ──────────────────────────────────────────
+      if (rule.schedule.type === 'once') {
+        if (rule.nextTrigger <= today) {
+          const exists = agenda.data[rule.nextTrigger]?.tareas?.some(i => i.ruleId === rule.id)
+          if (!exists) {
+            agenda.addRuleTask(rule.nextTrigger, {
+              id: uid(), texto: rule.taskText, done: false, avisos: [], ruleId: rule.id,
+            })
+            agendaChanged = true
+          }
+          toRemove.push(rule.id)   // eliminar la regla tras disparar
+        } else {
+          // pre-crear la tarea futura para que sea visible en el calendario
+          const exists = agenda.data[rule.nextTrigger]?.tareas?.some(i => i.ruleId === rule.id)
+          if (!exists) {
+            agenda.addRuleTask(rule.nextTrigger, {
+              id: uid(), texto: rule.taskText, done: false, avisos: [], ruleId: rule.id,
+            })
+            agendaChanged = true
+          }
+        }
+        continue
+      }
+
+      // ── Regla recurrente ──────────────────────────────────────────────────
       let current = rule.nextTrigger
       let iters   = 0
       let thisChanged = false
@@ -133,7 +162,7 @@ export const usePersistentRulesStore = defineStore('persistentRules', () => {
         rulesChanged = true
       }
 
-      // Pre-create the next 12 upcoming occurrences so they're visible in the calendar
+      // Pre-crear las próximas 12 ocurrencias para que sean visibles en el calendario
       let upcoming = current
       for (let i = 0; i < 12; i++) {
         const alreadyNext = agenda.data[upcoming]?.tareas?.some(item => item.ruleId === rule.id)
@@ -145,6 +174,11 @@ export const usePersistentRulesStore = defineStore('persistentRules', () => {
         }
         upcoming = calcNextTrigger(rule.schedule, upcoming)
       }
+    }
+
+    if (toRemove.length) {
+      rules.value = rules.value.filter(r => !toRemove.includes(r.id))
+      rulesChanged = true
     }
 
     if (agendaChanged) await agenda.save()

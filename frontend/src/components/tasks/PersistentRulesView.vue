@@ -57,7 +57,7 @@ async function confirm() {
     naturalText: text.value.trim(),
     taskText: preview.value.taskText,
     recurrenceDesc: preview.value.recurrenceDesc,
-    nextTrigger: calcFirstTrigger(preview.value.schedule),
+    nextTrigger: calcFirstTrigger(preview.value.schedule, preview.value.nextTrigger),
     lastTriggered: '',
     createdAt: new Date().toISOString(),
     schedule: preview.value.schedule,
@@ -126,6 +126,9 @@ function fmtDate(d: string) {
             <span class="prules-item-text">{{ rule.taskText }}</span>
             <span class="prules-item-sched">{{ rule.recurrenceDesc }}</span>
           </div>
+          <span class="prules-item-type" :title="rule.schedule.type==='once' ? T.rulesOnce : T.rulesRecurring">
+            {{ rule.schedule.type === 'once' ? '①' : '↻' }}
+          </span>
           <span class="prules-item-next">{{ fmtDate(rule.nextTrigger) }}</span>
           <button class="prules-del-btn" @click="store.removeRule(rule.id)">✕</button>
         </div>
