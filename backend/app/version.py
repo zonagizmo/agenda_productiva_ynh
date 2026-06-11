@@ -1,5 +1,5 @@
-VERSION      = "2.13.7"
-RELEASE_DATE = "2026-06-09"
+VERSION      = "2.13.8"
+RELEASE_DATE = "2026-06-11"
 
 _parts = VERSION.split(".")
 VERSION_MAJOR = int(_parts[0])

@@ -116,6 +116,8 @@ export interface RuleSchedule {
   workingDay?: boolean  // true = advance to Monday if target falls on weekend
 }
 
+export type AgendaSection = 'objetivos' | 'tareas' | 'reuniones' | 'plazos'
+
 export interface PersistentRule {
   id: string
   naturalText: string
@@ -125,6 +127,7 @@ export interface PersistentRule {
   lastTriggered: string // YYYY-MM-DD or ''
   createdAt: string
   schedule: RuleSchedule
+  section: AgendaSection
 }
 
 export interface SectionDef {

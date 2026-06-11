@@ -7,7 +7,7 @@ import { LANG } from '@/i18n'
 import { api } from '@/api/client'
 import { callAiDirect } from '@/composables/useAiCall'
 import { uid, todayKey } from '@/composables/useDate'
-import type { PersistentRule, RuleSchedule } from '@/types'
+import type { PersistentRule, RuleSchedule, AgendaSection } from '@/types'
 
 const ui    = useUiStore()
 const cfg   = useConfigStore()
@@ -18,7 +18,14 @@ const open     = ref(false)
 const text     = ref('')
 const loading  = ref(false)
 const error    = ref('')
-const preview  = ref<{ taskText: string; recurrenceDesc: string; nextTrigger: string; schedule: RuleSchedule } | null>(null)
+const preview  = ref<{ taskText: string; recurrenceDesc: string; nextTrigger: string; schedule: RuleSchedule; section: AgendaSection } | null>(null)
+
+function sectionIcon(key: AgendaSection): string {
+  return T.value.sections.find(s => s.key === key)?.icon ?? '✅'
+}
+function sectionLabel(key: AgendaSection): string {
+  return T.value.sections.find(s => s.key === key)?.label ?? key
+}
 
 function extractJson(raw: string): unknown {
   const stripped = raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim()
@@ -38,9 +45,13 @@ async function analyze() {
     const pd = await api.buildRulePrompt({ text: text.value.trim(), lang: ui.lang, today: todayKey() })
     const prov = cfg.currentProvider()
     const raw  = await callAiDirect(pd.prompt, prov, cfg.currentModel(), cfg.config.iaApiKey, ui.lang)
-    const parsed = extractJson(raw) as { taskText: string; recurrenceDesc: string; nextTrigger: string; schedule: RuleSchedule }
+    const parsed = extractJson(raw) as { taskText: string; recurrenceDesc: string; nextTrigger: string; schedule: RuleSchedule; section?: AgendaSection }
     if (!parsed.taskText || !parsed.schedule?.type || !parsed.nextTrigger) throw new Error('incomplete')
-    preview.value = parsed
+    const validSections: AgendaSection[] = ['objetivos', 'tareas', 'reuniones', 'plazos']
+    preview.value = {
+      ...parsed,
+      section: validSections.includes(parsed.section as AgendaSection) ? parsed.section as AgendaSection : 'tareas',
+    }
   } catch (e) {
     error.value = (e instanceof Error && e.message !== 'incomplete' && e.message !== 'no JSON')
       ? e.message
@@ -61,6 +72,7 @@ async function confirm() {
     lastTriggered: '',
     createdAt: new Date().toISOString(),
     schedule: preview.value.schedule,
+    section: preview.value.section,
   }
   await store.addRule(rule)
   await store.checkAndFire()
@@ -111,6 +123,7 @@ function fmtDate(d: string) {
       <!-- Preview -->
       <div v-if="preview" class="prules-preview">
         <div class="prules-preview-row"><span class="prules-lbl">{{ T.rulesTask }}</span><strong>{{ preview.taskText }}</strong></div>
+        <div class="prules-preview-row"><span class="prules-lbl">{{ T.rulesSection }}</span>{{ sectionIcon(preview.section) }} {{ sectionLabel(preview.section) }}</div>
         <div class="prules-preview-row"><span class="prules-lbl">{{ T.rulesSchedule }}</span>{{ preview.recurrenceDesc }}</div>
         <div class="prules-preview-row"><span class="prules-lbl">{{ T.rulesNext }}</span>{{ fmtDate(preview.nextTrigger) }}</div>
         <div class="prules-preview-actions">
@@ -123,7 +136,7 @@ function fmtDate(d: string) {
       <div v-if="store.rules.length" class="prules-list">
         <div v-for="rule in store.rules" :key="rule.id" class="prules-item">
           <div class="prules-item-main">
-            <span class="prules-item-text">{{ rule.taskText }}</span>
+            <span class="prules-item-text">{{ sectionIcon(rule.section ?? 'tareas') }} {{ rule.taskText }}</span>
             <span class="prules-item-sched">{{ rule.recurrenceDesc }}</span>
           </div>
           <span class="prules-item-type" :title="rule.schedule.type==='once' ? T.rulesOnce : T.rulesRecurring">
