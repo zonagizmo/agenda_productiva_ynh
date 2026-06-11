@@ -9,6 +9,7 @@ import { useConfigStore } from '@/stores/config'
 import { useUiStore } from '@/stores/ui'
 import { useNotifStore } from '@/stores/notifications'
 import { useTemplatesStore } from '@/stores/templates'
+import { usePersistentRulesStore } from '@/stores/persistentRules'
 import { LANG } from '@/i18n'
 import { api } from '@/api/client'
 import { callAiDirect } from '@/composables/useAiCall'
@@ -21,6 +22,7 @@ const cfg    = useConfigStore()
 const ui     = useUiStore()
 const notif  = useNotifStore()
 const tpls   = useTemplatesStore()
+const prules = usePersistentRulesStore()
 const T      = computed(() => LANG[ui.lang])
 
 const generating    = ref(false)
@@ -99,8 +101,13 @@ const recentDays = computed(() => {
 })
 
 type DayPanelEntry =
-  | { source: 'task';   id: string; texto: string; done: boolean; prioridad: Priority; toggle: () => void }
-  | { source: 'agenda'; id: string; texto: string; done: boolean; icon: string; section: string; toggle: () => void }
+  | { source: 'task';   id: string; texto: string; done: boolean; prioridad: Priority; ruleId?: undefined; toggle: () => void }
+  | { source: 'agenda'; id: string; texto: string; done: boolean; icon: string; section: string; ruleId?: string; toggle: () => void }
+
+async function toggleEntry(entry: DayPanelEntry) {
+  entry.toggle()
+  if (entry.ruleId) await prules.checkAndFire()
+}
 
 const allDayItems = computed<DayPanelEntry[]>(() => {
   const result: DayPanelEntry[] = []
@@ -115,7 +122,7 @@ const allDayItems = computed<DayPanelEntry[]>(() => {
     const items = agenda.day[sec.key] as AgendaItem[]
     for (const item of items) {
       if (!item.texto.trim()) continue
-      result.push({ source: 'agenda', id: item.id, texto: item.texto, done: !!item.done, icon: sec.icon, section: sec.key, toggle: () => agenda.toggleItemDone(sec.key, item.id) })
+      result.push({ source: 'agenda', id: item.id, texto: item.texto, done: !!item.done, icon: sec.icon, section: sec.key, ruleId: item.ruleId, toggle: () => agenda.toggleItemDone(sec.key, item.id) })
     }
   }
 
@@ -225,7 +232,7 @@ function doRollover() {
             <div v-for="entry in allDayItems" :key="entry.id" class="day-task-item" :class="{ 'day-task-done': entry.done }">
               <button class="day-task-check" :class="{ done: entry.done }"
                 :style="entry.done ? '' : (entry.source==='task' ? `border-color:${prioColor(entry.prioridad)};` : '')"
-                @click="entry.toggle()">{{ entry.done ? '✓' : '' }}</button>
+                @click="toggleEntry(entry)">{{ entry.done ? '✓' : '' }}</button>
               <span v-if="entry.source==='agenda'" class="day-task-icon">{{ entry.icon }}</span>
               <span class="day-task-text" :class="{ 'done-text': entry.done }">{{ entry.texto || '…' }}</span>
             </div>
