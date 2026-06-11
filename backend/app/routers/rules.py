@@ -36,11 +36,12 @@ Return exactly this JSON structure (fill in the values):
 
 Rules:
 - schedule.type: one of "daily", "weekly", "monthly", "yearly"
-- schedule.interval: positive integer, default 1
-- schedule.dayOfMonth: 1-31, only for "monthly" or "yearly"
+- schedule.interval: time BETWEEN occurrences (e.g. "every 2 months" → 2). NEVER use it for counts like "next 12 months" — the rule always repeats indefinitely.
+- schedule.dayOfMonth: 1-31, only for "monthly" or "yearly". "first" or "1st" → 1; "last" → 28; "15th" → 15. IMPORTANT: do NOT derive this number from duration phrases like "next 12 months".
 - schedule.dayOfWeek: 0-6 (0=Sunday), only for "weekly"
 - schedule.month: 1-12, only for "yearly"
 - schedule.workingDay: true if the user mentions "working day", "business day", "weekday", or similar. When true, the trigger date is automatically shifted to Monday if it falls on Saturday or Sunday.
+- Phrases like "for the next N months", "over the next N years", "during the next N weeks" describe a duration the user has in mind but do NOT change the schedule — ignore them entirely.
 - nextTrigger: first date >= today when this rule fires. If workingDay is true, the nextTrigger must already be a Monday-Friday date.
 
 Return ONLY the JSON object, nothing else."""
@@ -65,11 +66,12 @@ Devuelve exactamente esta estructura JSON (rellena los valores):
 
 Reglas:
 - schedule.type: uno de "daily", "weekly", "monthly", "yearly"
-- schedule.interval: entero positivo, por defecto 1
-- schedule.dayOfMonth: 1-31, solo para "monthly" o "yearly"
+- schedule.interval: tiempo ENTRE ocurrencias (ej. "cada 2 meses" → 2). NUNCA uses este campo para contar ocurrencias como "próximos 12 meses" — la regla se repite indefinidamente.
+- schedule.dayOfMonth: 1-31, solo para "monthly" o "yearly". "primer día" o "primero" → 1; "último día" → 28; "día 15" o "quince" → 15. IMPORTANTE: NO derives este número de frases de duración como "próximos 12 meses".
 - schedule.dayOfWeek: 0-6 (0=Domingo), solo para "weekly"
 - schedule.month: 1-12, solo para "yearly"
 - schedule.workingDay: true si el usuario menciona "día laborable", "día hábil", "entre semana" o similar. Cuando es true, la fecha de disparo se desplaza automáticamente al lunes siguiente si cae en sábado o domingo.
+- Frases como "en los próximos N meses", "durante los próximos N años", "en los próximos N semanas" describen una duración que el usuario tiene en mente pero NO modifican el schedule — ignóralas por completo.
 - nextTrigger: primera fecha >= hoy cuando se dispara esta regla. Si workingDay es true, el nextTrigger ya debe ser un día de lunes a viernes.
 
 Devuelve ÚNICAMENTE el objeto JSON, nada más."""
